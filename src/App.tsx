@@ -87,11 +87,11 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 glass rounded-[2rem] px-8 py-3 flex justify-between items-center shadow-soft">
-      <div className="flex items-center gap-10">
+    <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 glass rounded-[2.5rem] px-10 py-4 flex justify-between items-center shadow-premium">
+      <div className="flex items-center gap-12">
         <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('dashboard')}>
-          <div className="w-11 h-11 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
-            <Heart className="w-6 h-6 fill-current text-brand-gold" />
+          <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
+            <Heart className="w-7 h-7 fill-current text-brand-gold" />
           </div>
           <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight">مودة</span>
         </div>
@@ -101,7 +101,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
             <button 
               onClick={() => setView('dashboard')}
               className={cn(
-                "flex items-center gap-2 text-sm font-bold transition-all relative py-1",
+                "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
                 currentView === 'dashboard' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
               )}
             >
@@ -115,7 +115,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
               <button 
                 onClick={() => setView('matches')}
                 className={cn(
-                  "flex items-center gap-2 text-sm font-bold transition-all relative py-1",
+                  "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
                   currentView === 'matches' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
                 )}
               >
@@ -131,15 +131,15 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
       </div>
       
       {user && (
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-8">
           <div className="relative">
             <button 
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-3 hover:bg-brand-primary/5 rounded-2xl transition-all text-neutral-500 relative group"
+              className="p-3.5 hover:bg-brand-primary/5 rounded-2xl transition-all text-neutral-500 relative group"
             >
               <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
               {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 w-4 h-4 bg-brand-secondary text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-rose">
+                <span className="absolute top-2.5 right-2.5 w-4 h-4 bg-brand-secondary text-white text-[9px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-rose">
                   {unreadCount}
                 </span>
               )}
@@ -156,12 +156,12 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
 
           <div className="h-8 w-px bg-neutral-200 hidden sm:block" />
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
             <div className="text-right hidden sm:block">
-              <p className="text-xs font-bold text-brand-primary leading-none mb-1">{user.displayName?.split(' ')[0]}</p>
-              <button onClick={onSignOut} className="text-[10px] font-bold text-neutral-400 hover:text-brand-secondary transition-colors uppercase tracking-widest">خروج</button>
+              <p className="text-sm font-bold text-brand-primary leading-none mb-1">{user.displayName?.split(' ')[0]}</p>
+              <button onClick={onSignOut} className="text-[10px] font-bold text-neutral-400 hover:text-brand-secondary transition-colors uppercase tracking-[0.2em]">خروج</button>
             </div>
-            <div className="w-11 h-11 rounded-2xl border-2 border-brand-primary/10 overflow-hidden shadow-sm hover:border-brand-gold/50 transition-colors cursor-pointer">
+            <div className="w-12 h-12 rounded-2xl border-2 border-brand-primary/10 overflow-hidden shadow-soft hover:border-brand-gold/50 transition-colors cursor-pointer">
               <img src={user.photoURL || ''} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
           </div>
@@ -173,51 +173,60 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
 
 const LandingHero = ({ onSignIn }: { onSignIn: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 text-center relative overflow-hidden">
+    {/* Immersive Background */}
+    <div className="absolute inset-0 z-0">
+      <img 
+        src="https://picsum.photos/seed/luxury-pattern/1920/1080?blur=10" 
+        alt="" 
+        className="w-full h-full object-cover opacity-[0.03]"
+        referrerPolicy="no-referrer"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-brand-cream/0 via-brand-cream/50 to-brand-cream" />
+    </div>
+
     {/* Decorative Elements */}
-    <div className="absolute top-1/4 -left-20 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl" />
-    <div className="absolute bottom-1/4 -right-20 w-[30rem] h-[30rem] bg-brand-gold/5 rounded-full blur-3xl" />
-    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-[0.02] pointer-events-none" 
-         style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, var(--color-brand-primary) 1px, transparent 0)', backgroundSize: '40px 40px' }} />
+    <div className="absolute top-1/4 -left-20 w-80 h-80 bg-brand-primary/5 rounded-full blur-3xl animate-pulse" />
+    <div className="absolute bottom-1/4 -right-20 w-[30rem] h-[30rem] bg-brand-gold/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
     
     <motion.div 
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       className="max-w-5xl relative z-10"
     >
-      <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-brand-gold/10 text-brand-gold rounded-full text-[10px] font-bold uppercase tracking-[0.2em] mb-10 border border-brand-gold/20 shadow-sm">
+      <div className="inline-flex items-center gap-2 px-6 py-2.5 bg-white/80 backdrop-blur-xl text-brand-gold rounded-full text-[10px] font-bold uppercase tracking-[0.3em] mb-12 border border-brand-gold/20 shadow-premium">
         <Sparkles className="w-4 h-4" />
         <span>بوابة الزواج الرقمية الفاخرة</span>
       </div>
       
-      <h1 className="text-7xl md:text-9xl font-serif font-bold text-brand-primary mb-10 leading-[1.05] text-balance">
+      <h1 className="text-7xl md:text-[10rem] font-serif font-bold text-brand-primary mb-12 leading-[0.9] text-balance tracking-tight">
         ابحث عن شريك حياتك <br />
-        <span className="text-brand-gold italic font-medium">بذكاء ووقار</span>
+        <span className="text-gold-gradient italic font-medium">بذكاء ووقار</span>
       </h1>
       
-      <p className="text-2xl text-neutral-500 mb-16 max-w-3xl mx-auto leading-relaxed text-balance font-light">
+      <p className="text-2xl text-neutral-500 mb-20 max-w-3xl mx-auto leading-relaxed text-balance font-light italic">
         مودة هي منصة تجمع بين الأصالة والتقنية، نستخدم الذكاء الاصطناعي لتقريب المسافات بين القلوب الباحثة عن الاستقرار في بيئة آمنة ومحترمة.
       </p>
       
       <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
         <button 
           onClick={onSignIn}
-          className="px-14 py-6 premium-gradient text-white rounded-[2.5rem] font-bold text-xl shadow-2xl shadow-brand-primary/30 hover:scale-105 hover:shadow-brand-primary/40 transition-all flex items-center gap-4 group"
+          className="px-16 py-7 premium-gradient text-white rounded-[2.5rem] font-bold text-xl shadow-premium hover:scale-105 hover:shadow-brand-primary/40 transition-all flex items-center gap-4 group"
         >
           <span>ابدأ رحلتك الآن</span>
           <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
         </button>
         
-        <div className="flex items-center gap-5 px-8 py-5 bg-white/60 backdrop-blur-xl rounded-[2.5rem] border border-white/40 shadow-soft">
+        <div className="flex items-center gap-5 px-10 py-6 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-premium">
           <div className="flex -space-x-4 rtl:space-x-reverse">
             {[1,2,3,4].map(i => (
-              <div key={i} className="w-12 h-12 rounded-2xl border-2 border-white bg-neutral-200 overflow-hidden shadow-sm">
-                <img src={`https://picsum.photos/seed/${i+20}/100/100`} alt="User" referrerPolicy="no-referrer" />
+              <div key={i} className="w-14 h-14 rounded-2xl border-4 border-white bg-neutral-200 overflow-hidden shadow-soft">
+                <img src={`https://picsum.photos/seed/${i+20}/100/100`} alt="User" referrerPolicy="no-referrer" className="w-full h-full object-cover" />
               </div>
             ))}
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-brand-primary leading-none">+15,000</p>
-            <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest">عضو يبحثون عن المودة</p>
+            <p className="text-2xl font-bold text-brand-primary leading-none mb-1">+15,000</p>
+            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-[0.2em]">عضو يبحثون عن المودة</p>
           </div>
         </div>
       </div>
@@ -242,6 +251,16 @@ const LandingHero = ({ onSignIn }: { onSignIn: () => void }) => (
           <p className="text-base text-neutral-500 leading-relaxed font-light">{feature.desc}</p>
         </div>
       ))}
+    </motion.div>
+
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 1.5, duration: 1 }}
+      className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 opacity-30"
+    >
+      <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-brand-primary">اكتشف المزيد</span>
+      <div className="w-px h-12 bg-gradient-to-b from-brand-primary to-transparent" />
     </motion.div>
   </div>
 );
@@ -616,41 +635,44 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-20">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Stats Section */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
           {[
-            { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'bg-brand-primary' },
-            { label: 'مطابقات ناجحة', value: stats.totalMatches, icon: Heart, color: 'bg-brand-secondary' },
-            { label: 'طلبات معلقة', value: stats.pendingRequests, icon: Clock, color: 'bg-brand-gold' }
+            { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'bg-brand-primary', shadow: 'shadow-brand-primary/20' },
+            { label: 'مطابقات ناجحة', value: stats.totalMatches, icon: Heart, color: 'bg-brand-secondary', shadow: 'shadow-brand-secondary/20' },
+            { label: 'طلبات معلقة', value: stats.pendingRequests, icon: Clock, color: 'bg-brand-gold', shadow: 'shadow-brand-gold/20' }
           ].map((stat, i) => (
             <motion.div 
               key={i}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="bg-white rounded-[2.5rem] p-8 border border-brand-primary/5 shadow-soft flex items-center gap-6 group hover:shadow-gold transition-all"
+              className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-premium flex items-center gap-8 group hover:shadow-gold transition-all relative overflow-hidden"
             >
-              <div className={cn("w-16 h-16 rounded-2xl flex items-center justify-center text-white shadow-lg", stat.color)}>
-                <stat.icon className="w-8 h-8" />
+              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-brand-primary/5 rounded-full blur-3xl group-hover:bg-brand-primary/10 transition-all" />
+              <div className={cn("w-20 h-20 rounded-[2rem] flex items-center justify-center text-white shadow-2xl relative z-10", stat.color, stat.shadow)}>
+                <stat.icon className="w-10 h-10" />
               </div>
-              <div>
-                <p className="text-3xl font-bold text-brand-primary leading-none mb-1">{stat.value}</p>
-                <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">{stat.label}</p>
+              <div className="relative z-10">
+                <p className="text-5xl font-bold text-brand-primary leading-none mb-2">{stat.value}</p>
+                <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">{stat.label}</p>
               </div>
             </motion.div>
           ))}
         </div>
 
         {/* Users Table */}
-        <div className="lg:col-span-3 bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft overflow-hidden">
-          <div className="flex justify-between items-center mb-10">
+        <div className="lg:col-span-3 bg-white rounded-[4rem] p-12 border border-brand-primary/5 shadow-premium overflow-hidden relative">
+          <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-primary via-brand-gold to-brand-secondary opacity-20" />
+          
+          <div className="flex justify-between items-center mb-12">
             <div>
-              <h2 className="text-3xl font-serif font-bold text-brand-primary mb-2">إدارة المستخدمين</h2>
-              <p className="text-neutral-400 text-sm font-light">قائمة بجميع الأعضاء المسجلين في المنصة</p>
+              <h2 className="text-4xl font-serif font-bold text-brand-primary mb-3">إدارة المستخدمين</h2>
+              <p className="text-neutral-400 text-base font-light italic">قائمة بجميع الأعضاء المسجلين في المنصة</p>
             </div>
             <div className="flex gap-4">
-              <div className="px-6 py-3 bg-neutral-50 rounded-2xl border border-neutral-100 flex items-center gap-3">
-                <Users className="w-4 h-4 text-neutral-400" />
-                <span className="text-xs font-bold text-brand-primary">{users.length} عضو</span>
+              <div className="px-8 py-4 bg-brand-cream rounded-[2rem] border border-brand-primary/5 flex items-center gap-4 shadow-inner">
+                <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
+                <span className="text-sm font-bold text-brand-primary uppercase tracking-widest">{users.length} عضو نشط</span>
               </div>
             </div>
           </div>
@@ -659,62 +681,61 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
             <table className="w-full text-right">
               <thead>
                 <tr className="border-b border-neutral-50">
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">المستخدم</th>
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">النوع</th>
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">الجنس</th>
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">الحالة</th>
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">تاريخ التسجيل</th>
-                  <th className="pb-6 text-xs font-bold text-neutral-400 uppercase tracking-widest">الإجراءات</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">المستخدم</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">النوع</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الجنس</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الحالة</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">تاريخ التسجيل</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الإجراءات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-50">
                 {users.map((u) => (
-                  <tr key={u.uid} className="group hover:bg-neutral-50/50 transition-colors">
-                    <td className="py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl border border-neutral-100 overflow-hidden shadow-sm">
-                          <img src={u.photoURL || `https://ui-avatars.com/api/?name=${u.displayName}`} alt="" className="w-full h-full object-cover" />
+                  <tr key={u.uid} className="group hover:bg-brand-cream/30 transition-all duration-300">
+                    <td className="py-8">
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 rounded-2xl border-2 border-white overflow-hidden shadow-soft group-hover:scale-110 transition-transform">
+                          <img src={u.photoURL || `https://ui-avatars.com/api/?name=${u.displayName}`} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                         </div>
                         <div>
-                          <p className="font-bold text-brand-primary">{u.displayName}</p>
-                          <p className="text-[10px] text-neutral-400 font-medium">{u.uid.substring(0, 8)}...</p>
+                          <p className="font-bold text-brand-primary text-lg">{u.displayName}</p>
+                          <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">{u.uid.substring(0, 8)}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="py-6">
+                    <td className="py-8">
                       <button 
                         onClick={() => toggleRole(u.uid, u.role)}
                         className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all hover:scale-105 active:scale-95",
+                          "px-5 py-2 rounded-full text-[9px] font-bold uppercase tracking-[0.2em] border transition-all hover:scale-105 active:scale-95 shadow-sm",
                           u.role === 'admin' ? "bg-brand-secondary/10 text-brand-secondary border-brand-secondary/20 hover:bg-brand-secondary hover:text-white" : "bg-brand-primary/10 text-brand-primary border-brand-primary/20 hover:bg-brand-primary hover:text-white"
                         )}
-                        title="تغيير الدور"
                       >
                         {u.role === 'admin' ? 'مشرف' : 'عميل'}
                       </button>
                     </td>
-                    <td className="py-6">
-                      <span className="text-sm text-neutral-600">{u.gender === 'male' ? 'ذكر' : 'أنثى'}</span>
+                    <td className="py-8">
+                      <span className="text-sm font-medium text-neutral-600 italic">{u.gender === 'male' ? 'ذكر' : 'أنثى'}</span>
                     </td>
-                    <td className="py-6">
-                      <div className="flex items-center gap-2">
+                    <td className="py-8">
+                      <div className="flex items-center gap-3">
                         <div className={cn(
-                          "w-2 h-2 rounded-full shadow-sm",
-                          u.isVerified ? "bg-green-500 shadow-green-500/50" : "bg-neutral-300 shadow-neutral-300/50"
+                          "w-2.5 h-2.5 rounded-full",
+                          u.isVerified ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-neutral-300"
                         )} />
-                        <span className="text-xs font-bold text-neutral-600">{u.isVerified ? 'موثق' : 'غير موثق'}</span>
+                        <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">{u.isVerified ? 'موثق' : 'غير موثق'}</span>
                       </div>
                     </td>
-                    <td className="py-6">
-                      <span className="text-xs text-neutral-400">{u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString('ar-EG') : '-'}</span>
+                    <td className="py-8">
+                      <span className="text-xs font-medium text-neutral-400 font-mono">{u.createdAt ? new Date(u.createdAt.seconds * 1000).toLocaleDateString('ar-EG') : '-'}</span>
                     </td>
-                    <td className="py-6">
-                      <div className="flex items-center gap-3">
+                    <td className="py-8">
+                      <div className="flex items-center gap-4">
                         <button 
                           onClick={() => toggleVerification(u.uid, !!u.isVerified)}
                           className={cn(
-                            "p-2 rounded-lg transition-all hover:scale-110 active:scale-90",
-                            u.isVerified ? "text-green-500 bg-green-50" : "text-neutral-300 bg-neutral-50 hover:text-brand-primary"
+                            "p-3 rounded-2xl transition-all hover:scale-110 active:scale-90 shadow-sm",
+                            u.isVerified ? "text-green-500 bg-green-50 border border-green-100" : "text-neutral-300 bg-neutral-50 border border-neutral-100 hover:text-brand-primary hover:border-brand-primary/20"
                           )}
                           title={u.isVerified ? "إلغاء التوثيق" : "توثيق الحساب"}
                         >
@@ -722,7 +743,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
                         </button>
                         <button 
                           onClick={() => toggleRole(u.uid, u.role)}
-                          className="p-2 rounded-lg text-neutral-300 hover:text-brand-secondary hover:bg-brand-secondary/5 transition-all hover:scale-110 active:scale-90"
+                          className="p-3 rounded-2xl text-neutral-300 bg-neutral-50 border border-neutral-100 hover:text-brand-secondary hover:bg-brand-secondary/5 hover:border-brand-secondary/20 transition-all hover:scale-110 active:scale-90 shadow-sm"
                           title="تغيير الدور"
                         >
                           <Shield className="w-5 h-5" />
@@ -791,32 +812,32 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="premium-gradient rounded-[3rem] p-10 text-white shadow-2xl relative overflow-hidden group"
+            className="premium-gradient rounded-[3rem] p-10 text-white shadow-premium relative overflow-hidden group"
           >
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-white/20 transition-all" />
             <div className="flex flex-col items-center text-center relative z-10">
               <div className="relative mb-8">
-                <div className="w-32 h-32 rounded-[2.5rem] border-4 border-white/20 p-1 shadow-2xl group-hover:scale-105 transition-transform bg-white/10 overflow-hidden">
-                  <img src={user.photoURL || ''} alt="Me" className="w-full h-full object-cover rounded-[2rem]" referrerPolicy="no-referrer" />
+                <div className="w-36 h-36 rounded-[3rem] border-4 border-white/20 p-1 shadow-2xl group-hover:scale-105 transition-transform bg-white/10 overflow-hidden">
+                  <img src={user.photoURL || ''} alt="Me" className="w-full h-full object-cover rounded-[2.5rem]" referrerPolicy="no-referrer" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-brand-gold rounded-xl flex items-center justify-center border-4 border-brand-primary shadow-lg">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="absolute -bottom-2 -right-2 w-12 h-12 bg-brand-gold rounded-2xl flex items-center justify-center border-4 border-brand-primary shadow-premium">
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
               </div>
               
               <h2 className="text-4xl font-serif font-bold mb-2 tracking-tight">{profile.displayName}</h2>
-              <div className="px-4 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-10">
-                <p className="text-brand-gold font-bold text-[10px] uppercase tracking-[0.3em]">عضو موثق ومتميز</p>
+              <div className="px-5 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 mb-12">
+                <p className="text-brand-gold font-bold text-[10px] uppercase tracking-[0.4em]">عضو موثق ومتميز</p>
               </div>
               
               <div className="grid grid-cols-2 gap-6 w-full">
-                <div className="bg-white/10 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 group/stat hover:bg-white/20 transition-colors">
-                  <p className="text-3xl font-bold leading-none mb-2">0</p>
-                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest group-hover:text-white transition-colors">مطابقات</p>
+                <div className="bg-white/10 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 group/stat hover:bg-white/20 transition-colors">
+                  <p className="text-4xl font-bold leading-none mb-2">0</p>
+                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors">مطابقات</p>
                 </div>
-                <div className="bg-white/10 backdrop-blur-md rounded-[2rem] p-6 border border-white/10 group/stat hover:bg-white/20 transition-colors">
-                  <p className="text-3xl font-bold leading-none mb-2">0</p>
-                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest group-hover:text-white transition-colors">طلبات</p>
+                <div className="bg-white/10 backdrop-blur-md rounded-[2.5rem] p-8 border border-white/10 group/stat hover:bg-white/20 transition-colors">
+                  <p className="text-4xl font-bold leading-none mb-2">0</p>
+                  <p className="text-[10px] text-white/60 font-bold uppercase tracking-[0.2em] group-hover:text-white transition-colors">طلبات</p>
                 </div>
               </div>
             </div>
@@ -890,34 +911,48 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   <div className="absolute top-0 right-0 w-40 h-40 bg-brand-gold/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-brand-gold/10 transition-all" />
                   
                   <div className="flex items-start justify-between mb-8 relative z-10">
-                    <div className="w-24 h-24 bg-brand-cream rounded-[2rem] flex items-center justify-center text-brand-primary shadow-inner group-hover:scale-105 transition-transform overflow-hidden">
-                      <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.displayName}&background=random`} alt={p.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                    <div className="relative group/avatar">
+                      <div className="w-28 h-28 bg-brand-cream rounded-[2.5rem] border-2 border-brand-primary/5 flex items-center justify-center text-brand-primary shadow-inner group-hover/avatar:scale-105 transition-transform overflow-hidden">
+                        <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.displayName}&background=random`} alt={p.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      </div>
+                      {p.isVerified && (
+                        <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-xl flex items-center justify-center border-4 border-white shadow-lg">
+                          <CheckCircle2 className="w-4 h-4 text-white" />
+                        </div>
+                      )}
                     </div>
-                    <div className="px-5 py-2 bg-brand-gold/10 text-brand-gold rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-brand-gold/10 shadow-sm">
-                      عضو جديد
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="px-5 py-2 bg-brand-gold/10 text-brand-gold rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border border-brand-gold/10 shadow-sm">
+                        عضو جديد
+                      </div>
+                      <div className="px-4 py-1.5 bg-brand-primary/5 text-brand-primary rounded-full text-[9px] font-bold uppercase tracking-[0.1em] border border-brand-primary/5">
+                        توافق 95%
+                      </div>
                     </div>
                   </div>
                   
-                  <h3 className="text-3xl font-serif font-bold mb-2 text-brand-primary">{p.displayName}</h3>
+                  <h3 className="text-3xl font-serif font-bold mb-2 text-brand-primary group-hover:text-gold-gradient transition-all">{p.displayName}</h3>
                   <div className="flex items-center gap-3 mb-8">
-                    <span className="text-neutral-400 text-sm font-bold uppercase tracking-[0.2em]">{new Date().getFullYear() - new Date(p.birthDate).getFullYear()} عاماً</span>
+                    <span className="text-neutral-400 text-xs font-bold uppercase tracking-[0.2em]">{new Date().getFullYear() - new Date(p.birthDate).getFullYear()} عاماً</span>
                     <div className="w-1.5 h-1.5 bg-brand-gold/30 rounded-full" />
-                    <span className="text-neutral-400 text-sm font-bold uppercase tracking-[0.2em]">{p.gender === 'male' ? 'رجل' : 'امرأة'}</span>
+                    <span className="text-neutral-400 text-xs font-bold uppercase tracking-[0.2em]">{p.gender === 'male' ? 'رجل' : 'امرأة'}</span>
                   </div>
                   
-                  <p className="text-neutral-500 text-base line-clamp-3 mb-10 leading-relaxed h-[5.5rem] font-light italic">
-                    {p.bio || "لا يوجد نبذة شخصية متاحة حالياً."}
-                  </p>
+                  <div className="bg-brand-cream/30 p-6 rounded-[2rem] border border-brand-primary/5 mb-10 relative group-hover:bg-brand-cream/50 transition-colors">
+                    <p className="text-neutral-500 text-sm line-clamp-3 leading-relaxed h-[4.5rem] font-light italic">
+                      {p.bio || "لا يوجد نبذة شخصية متاحة حالياً."}
+                    </p>
+                  </div>
                   
                   <div className="flex gap-4 relative z-10">
-                    <button className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn">
+                    <button className="flex-1 py-5 bg-white text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest border border-brand-primary/5 hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn shadow-sm hover:shadow-premium">
                       <span>عرض الملف</span>
                       <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                     </button>
                     <button 
                       onClick={() => handleRequestMatch(p)}
                       disabled={requestingMatch === p.uid}
-                      className="w-16 h-16 bg-brand-secondary text-white rounded-[1.5rem] flex items-center justify-center hover:scale-110 active:scale-95 transition-all disabled:opacity-50 shadow-xl shadow-brand-secondary/30 group/heart"
+                      className="w-16 h-16 bg-brand-secondary text-white rounded-[1.5rem] flex items-center justify-center hover:scale-110 active:scale-95 transition-all disabled:opacity-50 shadow-rose group/heart"
                     >
                       {requestingMatch === p.uid ? (
                         <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />

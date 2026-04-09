@@ -29,7 +29,7 @@
 
 @layer utilities {
   .glass {
-    @apply bg-white/60 backdrop-blur-xl border border-white/30;
+    @apply bg-white/70 backdrop-blur-2xl border border-white/40;
   }
   
   .text-balance {
@@ -48,6 +48,22 @@
     background: linear-gradient(135deg, #D4AF37 0%, #C5A059 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+  }
+
+  .border-gold-subtle {
+    border: 1px solid rgba(197, 160, 89, 0.2);
+  }
+
+  .tracking-ultra-wide {
+    letter-spacing: 0.3em;
+  }
+
+  .shadow-premium {
+    box-shadow: 0 20px 50px -12px rgba(27, 60, 53, 0.12);
+  }
+
+  .shadow-gold-glow {
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.2);
   }
 }
 
