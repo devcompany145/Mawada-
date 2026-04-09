@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User profile information including personal details and preferences for matching.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "displayName": { "type": "string", "description": "Full name or alias" },
+        "gender": { "type": "string", "enum": ["male", "female"] },
+        "birthDate": { "type": "string", "format": "date" },
+        "bio": { "type": "string", "description": "Short biography" },
+        "values": { "type": "array", "items": { "type": "string" }, "description": "Cultural and personal values" },
+        "goals": { "type": "string", "description": "Marriage goals" },
+        "waliContact": { "type": "string", "description": "Contact info for Wali (optional)" },
+        "isPublic": { "type": "boolean", "description": "Whether the profile is visible to others" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "displayName", "gender", "birthDate"]
+    },
+    "MatchRequest": {
+      "title": "Match Request",
+      "description": "A request for matching between two users.",
+      "type": "object",
+      "properties": {
+        "fromUid": { "type": "string" },
+        "toUid": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "accepted", "rejected"] },
+        "compatibilityScore": { "type": "number" },
+        "analysis": { "type": "string", "description": "AI analysis of compatibility" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["fromUid", "toUid", "status"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app notification for users.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Recipient user ID" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["match_request", "match_accepted", "match_rejected"] },
+        "relatedId": { "type": "string", "description": "ID of the related match or chat" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message", "type", "isRead"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles collection"
+    },
+    "/matches/{matchId}": {
+      "schema": "MatchRequest",
+      "description": "Match requests collection"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications collection"
+    }
+  }
+}
