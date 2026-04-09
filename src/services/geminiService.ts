@@ -60,9 +60,10 @@ export async function analyzeAssessment(assessment: any) {
         - Social Preference: ${assessment.socialPreference}
         - Traditional Values: ${assessment.traditionalValues}
         
-        Provide the response in JSON format with two fields:
+        Provide the response in JSON format with three fields:
         1. "profileTitle": A short, catchy title for their personality type (in Arabic).
         2. "detailedAnalysis": A detailed paragraph analyzing their traits and ideal partner (in Arabic).
+        3. "readinessScore": A number from 0 to 100 representing their readiness for marriage based on their maturity and clarity of goals.
       `,
       config: {
         responseMimeType: "application/json",
@@ -70,9 +71,10 @@ export async function analyzeAssessment(assessment: any) {
           type: Type.OBJECT,
           properties: {
             profileTitle: { type: Type.STRING },
-            detailedAnalysis: { type: Type.STRING }
+            detailedAnalysis: { type: Type.STRING },
+            readinessScore: { type: Type.NUMBER }
           },
-          required: ["profileTitle", "detailedAnalysis"]
+          required: ["profileTitle", "detailedAnalysis", "readinessScore"]
         }
       }
     });

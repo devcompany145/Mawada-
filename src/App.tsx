@@ -40,7 +40,10 @@ import {
   Compass,
   BrainCircuit,
   Bell,
-  Clock
+  Clock,
+  BookOpen,
+  Headphones,
+  Database
 } from 'lucide-react';
 import { cn } from './lib/utils';
 
@@ -62,6 +65,7 @@ interface UserProfile {
   aiAnalysis?: {
     profileTitle: string;
     detailedAnalysis: string;
+    readinessScore: number;
   };
 }
 
@@ -171,7 +175,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
   );
 };
 
-const LandingHero = ({ onSignIn }: { onSignIn: () => void }) => (
+const LandingHero = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoSignIn: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 text-center relative overflow-hidden">
     {/* Immersive Background */}
     <div className="absolute inset-0 z-0">
@@ -214,6 +218,14 @@ const LandingHero = ({ onSignIn }: { onSignIn: () => void }) => (
         >
           <span>ابدأ رحلتك الآن</span>
           <ChevronRight className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+        </button>
+
+        <button 
+          onClick={onDemoSignIn}
+          className="px-12 py-6 bg-white text-brand-primary border-2 border-brand-primary/10 rounded-[2.5rem] font-bold text-lg shadow-soft hover:bg-brand-primary/5 transition-all flex items-center gap-3 group"
+        >
+          <Sparkles className="w-5 h-5 text-brand-gold" />
+          <span>تجربة سريعة (Demo)</span>
         </button>
         
         <div className="flex items-center gap-5 px-10 py-6 bg-white/80 backdrop-blur-2xl rounded-[2.5rem] border border-white/40 shadow-premium">
@@ -268,7 +280,7 @@ const LandingHero = ({ onSignIn }: { onSignIn: () => void }) => (
 const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: UserProfile) => void }) => {
   const [step, setStep] = useState(-1); // -1: Role Selection, 0: Assessment, 1: AI Result, 2: Basic Info, 3: Bio/Goals, 4: Privacy
   const [assessmentData, setAssessmentData] = useState<AssessmentData | null>(null);
-  const [aiResult, setAiResult] = useState<{ profileTitle: string, detailedAnalysis: string } | null>(null);
+  const [aiResult, setAiResult] = useState<{ profileTitle: string, detailedAnalysis: string, readinessScore: number } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -425,6 +437,23 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
                         <span className="text-xs font-bold uppercase tracking-widest text-brand-gold">نتيجة التقييم</span>
                       </div>
                       <h3 className="text-4xl font-serif font-bold text-brand-primary mb-6">{aiResult?.profileTitle}</h3>
+                      
+                      {/* Readiness Score */}
+                      <div className="mb-8 p-6 bg-white/50 rounded-[1.5rem] border border-brand-primary/5">
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-xs font-bold text-brand-primary uppercase tracking-widest">نسبة الجاهزية للزواج</span>
+                          <span className="text-xl font-bold text-brand-gold">{aiResult?.readinessScore}%</span>
+                        </div>
+                        <div className="w-full h-2 bg-brand-primary/10 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            animate={{ width: `${aiResult?.readinessScore}%` }}
+                            transition={{ duration: 1 }}
+                            className="h-full premium-gradient"
+                          />
+                        </div>
+                      </div>
+
                       <p className="text-lg text-neutral-700 leading-relaxed italic">
                         "{aiResult?.detailedAnalysis}"
                       </p>
@@ -631,11 +660,101 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
     }
   };
 
+  const seedDummyData = async () => {
+    const dummyUsers = [
+      {
+        uid: 'demo_1',
+        displayName: 'أحمد المنصور',
+        gender: 'male',
+        birthDate: '1990-05-15',
+        bio: 'مهندس برمجيات، أبحث عن شريكة حياة تقدر العلم والعمل، وتشاركني اهتماماتي في القراءة والسفر.',
+        values: ['العلم', 'الصدق', 'الاستقرار'],
+        goals: 'بناء أسرة سعيدة ومستقرة قائمة على المودة والرحمة.',
+        isPublic: true,
+        isVerified: true,
+        role: 'client',
+        photoURL: 'https://picsum.photos/seed/ahmed/200/200',
+        aiAnalysis: {
+          profileTitle: 'المفكر الطموح',
+          detailedAnalysis: 'شخصية عقلانية ومنظمة، تمتلك رؤية واضحة للمستقبل وتوازن بين الطموح المهني والاستقرار العائلي.',
+          readinessScore: 85
+        }
+      },
+      {
+        uid: 'demo_2',
+        displayName: 'سارة القحطاني',
+        gender: 'female',
+        birthDate: '1994-08-22',
+        bio: 'طبيبة أطفال، أحب الطبيعة والهدوء، أبحث عن شخص متفهم، طموح، ويقدر الروابط الأسرية.',
+        values: ['العائلة', 'الرحمة', 'الوفاء'],
+        goals: 'تكوين أسرة تكون هي الملاذ الآمن والداعم الأول لكل أفرادها.',
+        isPublic: true,
+        isVerified: true,
+        role: 'client',
+        photoURL: 'https://picsum.photos/seed/sara/200/200',
+        aiAnalysis: {
+          profileTitle: 'الروح المعطاءة',
+          detailedAnalysis: 'شخصية حنونة وذكية عاطفياً، تضع العائلة في مقدمة أولوياتها وتمتلك قدرة عالية على الاحتواء.',
+          readinessScore: 92
+        }
+      },
+      {
+        uid: 'demo_3',
+        displayName: 'خالد العتيبي',
+        gender: 'male',
+        birthDate: '1988-12-10',
+        bio: 'رائد أعمال، أهتم بالرياضة والثقافة، أبحث عن شريكة حياة طموحة ومثقفة.',
+        values: ['النجاح', 'الاحترام', 'المغامرة'],
+        goals: 'النمو معاً في رحلة الحياة وتحقيق التوازن بين النجاح الشخصي والأسري.',
+        isPublic: true,
+        isVerified: false,
+        role: 'client',
+        photoURL: 'https://picsum.photos/seed/khaled/200/200',
+        aiAnalysis: {
+          profileTitle: 'القائد الملهم',
+          detailedAnalysis: 'شخصية قيادية ومبادرة، تسعى دائماً للأفضل وتمتلك طاقة إيجابية معدية.',
+          readinessScore: 78
+        }
+      },
+      {
+        uid: 'demo_4',
+        displayName: 'ليلى الشمري',
+        gender: 'female',
+        birthDate: '1996-03-05',
+        bio: 'مصممة جرافيك، فنانة بطبعي، أبحث عن شخص يقدر الفن والجمال، ويكون سنداً لي في مسيرتي.',
+        values: ['الإبداع', 'الحرية', 'الصدق'],
+        goals: 'بناء حياة مليئة بالألوان والمشاركة والنمو المستمر.',
+        isPublic: true,
+        isVerified: true,
+        role: 'client',
+        photoURL: 'https://picsum.photos/seed/layla/200/200',
+        aiAnalysis: {
+          profileTitle: 'الفنانة الحالمة',
+          detailedAnalysis: 'شخصية مبدعة وحساسة، تمتلك نظرة فريدة للحياة وتسعى لبناء علاقة قائمة على التفاهم العميق.',
+          readinessScore: 88
+        }
+      }
+    ];
+
+    try {
+      for (const user of dummyUsers) {
+        await setDoc(doc(db, 'users', user.uid), {
+          ...user,
+          createdAt: serverTimestamp()
+        });
+      }
+      alert("تمت إضافة البيانات التجريبية بنجاح!");
+    } catch (error) {
+      console.error("Error seeding data:", error);
+      alert("حدث خطأ أثناء إضافة البيانات.");
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-6 pt-32 pb-20">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
         {/* Stats Section */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           {[
             { label: 'إجمالي المستخدمين', value: stats.totalUsers, icon: Users, color: 'bg-brand-primary', shadow: 'shadow-brand-primary/20' },
             { label: 'مطابقات ناجحة', value: stats.totalMatches, icon: Heart, color: 'bg-brand-secondary', shadow: 'shadow-brand-secondary/20' },
@@ -658,6 +777,22 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
               </div>
             </motion.div>
           ))}
+          
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            onClick={seedDummyData}
+            className="bg-brand-cream rounded-[3rem] p-10 border border-brand-gold/20 shadow-premium flex items-center gap-8 group hover:bg-brand-gold/10 transition-all relative overflow-hidden text-right"
+          >
+            <div className="w-20 h-20 rounded-[2rem] bg-brand-gold flex items-center justify-center text-white shadow-2xl relative z-10">
+              <Database className="w-10 h-10" />
+            </div>
+            <div className="relative z-10">
+              <p className="text-xl font-bold text-brand-primary mb-1">إضافة بيانات</p>
+              <p className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.2em]">تجريبية للنظام</p>
+            </div>
+          </motion.button>
         </div>
 
         {/* Users Table */}
@@ -857,13 +992,72 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   </div>
                 </div>
                 <h4 className="text-3xl font-serif font-bold text-brand-primary mb-6 leading-tight text-gold-gradient">{profile.aiAnalysis.profileTitle}</h4>
-                <div className="bg-brand-cream/50 p-8 rounded-[2rem] border border-brand-primary/5 relative">
+                
+                {/* Readiness Score Display */}
+                <div className="mb-8 p-6 bg-brand-primary/5 rounded-[2rem] border border-brand-primary/10">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-sm font-bold text-brand-primary uppercase tracking-widest">نسبة الجاهزية للزواج</span>
+                    <span className="text-2xl font-bold text-brand-gold">{profile.aiAnalysis.readinessScore}%</span>
+                  </div>
+                  <div className="w-full h-3 bg-brand-primary/10 rounded-full overflow-hidden">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${profile.aiAnalysis.readinessScore}%` }}
+                      transition={{ duration: 1, delay: 0.5 }}
+                      className="h-full premium-gradient"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-brand-cream/50 p-8 rounded-[2rem] border border-brand-primary/5 relative mb-8">
                   <div className="absolute top-4 left-4 opacity-10">
                     <Sparkles className="w-8 h-8 text-brand-gold" />
                   </div>
                   <p className="text-base text-neutral-600 leading-relaxed italic font-light">
                     {profile.aiAnalysis.detailedAnalysis}
                   </p>
+                </div>
+
+                {/* Support & Guidance Section */}
+                <div className="space-y-4">
+                  <h5 className="text-sm font-bold text-brand-primary uppercase tracking-[0.2em] mb-4">الدعم والتطوير المقترح</h5>
+                  
+                  {profile.aiAnalysis.readinessScore < 70 ? (
+                    <div className="p-6 bg-brand-secondary/5 rounded-[2rem] border border-brand-secondary/10 flex items-center gap-5 group hover:bg-brand-secondary/10 transition-all cursor-pointer">
+                      <div className="w-12 h-12 bg-brand-secondary/10 rounded-xl flex items-center justify-center text-brand-secondary">
+                        <BookOpen className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="font-bold text-brand-primary text-sm">دورة تأهيل المقبلين على الزواج</p>
+                        <p className="text-[10px] text-neutral-400 font-medium">برنامج تدريبي شامل لتعزيز مهارات التواصل وبناء الأسرة</p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-brand-secondary group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  ) : (
+                    <div className="p-6 bg-green-50 rounded-[2rem] border border-green-100 flex items-center gap-5">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-green-600">
+                        <CheckCircle2 className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1 text-right">
+                        <p className="font-bold text-brand-primary text-sm">جاهزية ممتازة</p>
+                        <p className="text-[10px] text-neutral-400 font-medium">أنت تمتلك وعياً عالياً بمتطلبات الحياة الزوجية</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <button 
+                    onClick={() => alert("سيتم التواصل معك من قبل مستشار أسري قريباً.")}
+                    className="w-full p-6 bg-white border border-brand-gold/20 rounded-[2rem] flex items-center gap-5 group hover:shadow-gold transition-all"
+                  >
+                    <div className="w-12 h-12 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                      <Headphones className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1 text-right">
+                      <p className="font-bold text-brand-primary text-sm">طلب جلسة إرشاد خاصة</p>
+                      <p className="text-[10px] text-neutral-400 font-medium">تحدث مع خبير أسري لمناقشة تطلعاتك وتحدياتك</p>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-brand-gold group-hover:translate-x-1 transition-transform" />
+                  </button>
                 </div>
               </div>
             </div>
@@ -979,7 +1173,7 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
 };
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthReady, setIsAuthReady] = useState(false);
@@ -1032,10 +1226,41 @@ export default function App() {
 
   const handleSignOut = async () => {
     try {
+      if (user?.uid === 'demo_admin') {
+        setUser(null);
+        setProfile(null);
+        return;
+      }
       await signOut(auth);
     } catch (error) {
       console.error("Sign out error:", error);
     }
+  };
+
+  const handleDemoSignIn = () => {
+    const mockUser = {
+      uid: 'demo_admin',
+      displayName: 'مشرف تجريبي',
+      photoURL: 'https://ui-avatars.com/api/?name=Admin&background=random',
+      email: 'admin@mawada.com'
+    };
+    const mockProfile: UserProfile = {
+      uid: 'demo_admin',
+      displayName: 'مشرف تجريبي',
+      photoURL: 'https://ui-avatars.com/api/?name=Admin&background=random',
+      role: 'admin',
+      gender: 'male',
+      birthDate: '1985-01-01',
+      bio: 'حساب تجريبي لإدارة المنصة واستعراض المميزات.',
+      values: ['الإدارة', 'التطوير'],
+      goals: 'تحسين تجربة المستخدم.',
+      isPublic: false,
+      isVerified: true,
+      createdAt: new Date()
+    };
+    setUser(mockUser);
+    setProfile(mockProfile);
+    setIsAuthReady(true);
   };
 
   if (loading || !isAuthReady) {
@@ -1058,7 +1283,7 @@ export default function App() {
       
       <main>
         {!user ? (
-          <LandingHero onSignIn={handleSignIn} />
+          <LandingHero onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
         ) : !profile ? (
           <ProfileSetup user={user} onComplete={setProfile} />
         ) : (
