@@ -34,7 +34,8 @@ import {
   Wallet,
   Smile,
   MapPin,
-  Brain
+  Brain,
+  Search
 } from 'lucide-react';
 import { UserProfile } from '../App';
 import { cn } from '../lib/utils';
@@ -58,6 +59,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -107,7 +109,11 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
   }
 
   const filteredMatches = matches
-    .filter(m => filterStatus === 'all' || m.status === filterStatus)
+    .filter(m => {
+      const matchesStatus = filterStatus === 'all' || m.status === filterStatus;
+      const matchesSearch = m.otherProfile?.displayName?.toLowerCase().includes(searchTerm.toLowerCase()) ?? true;
+      return matchesStatus && matchesSearch;
+    })
     .sort((a, b) => {
       const dateA = a.createdAt?.seconds || 0;
       const dateB = b.createdAt?.seconds || 0;
@@ -122,25 +128,40 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
     <div className="space-y-16">
       {/* Controls */}
       <div className="flex flex-wrap items-center justify-between gap-6 bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-soft">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary">
-            <Filter className="w-5 h-5" />
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary">
+              <Filter className="w-5 h-5" />
+            </div>
+            <div className="flex gap-2">
+              {(['all', 'pending', 'accepted', 'rejected'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={cn(
+                    "px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border",
+                    filterStatus === status 
+                      ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20" 
+                      : "bg-white text-neutral-400 border-neutral-100 hover:border-brand-primary/20 hover:text-brand-primary"
+                  )}
+                >
+                  {status === 'all' ? 'الكل' : status === 'pending' ? 'قيد الانتظار' : status === 'accepted' ? 'مقبول' : 'معتذر'}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex gap-2">
-            {(['all', 'pending', 'accepted', 'rejected'] as const).map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                className={cn(
-                  "px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border",
-                  filterStatus === status 
-                    ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20" 
-                    : "bg-white text-neutral-400 border-neutral-100 hover:border-brand-primary/20 hover:text-brand-primary"
-                )}
-              >
-                {status === 'all' ? 'الكل' : status === 'pending' ? 'قيد الانتظار' : status === 'accepted' ? 'مقبول' : 'معتذر'}
-              </button>
-            ))}
+
+          <div className="relative group">
+            <div className="absolute inset-y-0 right-6 flex items-center pointer-events-none text-neutral-400 group-focus-within:text-brand-primary transition-colors">
+              <Search className="w-4 h-4" />
+            </div>
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="البحث بالاسم..."
+              className="pr-14 pl-6 py-2.5 bg-white border border-neutral-100 rounded-full text-xs font-medium text-brand-primary placeholder:text-neutral-400 focus:ring-2 focus:ring-brand-primary/10 focus:border-brand-primary/20 outline-none w-64 transition-all"
+            />
           </div>
         </div>
 
