@@ -14,6 +14,25 @@
         "goals": { "type": "string", "description": "Marriage goals" },
         "waliContact": { "type": "string", "description": "Contact info for Wali (optional)" },
         "isPublic": { "type": "boolean", "description": "Whether the profile is visible to others" },
+        "assessment": { "type": "object", "description": "In-depth personality assessment results" },
+        "aiAnalysis": {
+          "type": "object",
+          "properties": {
+            "profileTitle": { "type": "string" },
+            "detailedAnalysis": { "type": "string" },
+            "readinessScore": { "type": "number" }
+          }
+        },
+        "verificationData": {
+          "type": "object",
+          "properties": {
+            "docType": { "type": "string", "enum": ["national_id", "passport"] },
+            "docUrl": { "type": "string" },
+            "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+            "submittedAt": { "type": "string", "format": "date-time" },
+            "feedback": { "type": "string" }
+          }
+        },
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["uid", "displayName", "gender", "birthDate"]

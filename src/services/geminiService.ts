@@ -15,12 +15,14 @@ export async function analyzeCompatibility(userA: any, userB: any) {
         - Bio: ${userA.bio}
         - Values: ${userA.values?.join(', ')}
         - Goals: ${userA.goals}
+        - Assessment: ${userA.assessment ? JSON.stringify(userA.assessment) : 'Not completed'}
         
         Profile B:
         - Gender: ${userB.gender}
         - Bio: ${userB.bio}
         - Values: ${userB.values?.join(', ')}
         - Goals: ${userB.goals}
+        - Assessment: ${userB.assessment ? JSON.stringify(userB.assessment) : 'Not completed'}
         
         Provide a compatibility score (0-100) and a brief professional analysis in Arabic.
       `,
@@ -54,11 +56,11 @@ export async function analyzeAssessment(assessment: any) {
         Focus on their strengths in a relationship and what kind of partner would complement them.
         
         Assessment Data:
-        - Conflict Handling: ${assessment.conflictStyle}
-        - Life Priority: ${assessment.lifePriority}
-        - Financial View: ${assessment.financialView}
-        - Social Preference: ${assessment.socialPreference}
-        - Traditional Values: ${assessment.traditionalValues}
+        - Core Values: ${assessment.religionImportance}, ${assessment.honestyView}, ${assessment.loyaltyDefinition}
+        - Future Goals: ${assessment.careerFamilyBalance}, ${assessment.childrenDesire}, ${assessment.residencePreference}
+        - Conflict Resolution: ${assessment.angerManagement}, ${assessment.apologyWillingness}, ${assessment.conflictStyle}
+        - Communication: ${assessment.communicationDepth}, ${assessment.sharingFeelings}, ${assessment.communicationMedium}
+        - General: ${assessment.lifePriority}, ${assessment.financialView}, ${assessment.socialPreference}, ${assessment.traditionalValues}
         
         Provide the response in JSON format with three fields:
         1. "profileTitle": A short, catchy title for their personality type (in Arabic).

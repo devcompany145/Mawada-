@@ -4,7 +4,9 @@ import {
   signInWithPopup, 
   GoogleAuthProvider, 
   signOut,
-  User
+  User,
+  updatePassword,
+  deleteUser
 } from 'firebase/auth';
 import { 
   doc, 
@@ -17,7 +19,8 @@ import {
   serverTimestamp,
   getDocFromServer,
   addDoc,
-  updateDoc
+  updateDoc,
+  deleteDoc
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
@@ -43,12 +46,22 @@ import {
   Clock,
   BookOpen,
   Headphones,
-  Database
+  Database,
+  Home,
+  Gift,
+  Headset,
+  Calendar,
+  Settings as SettingsIcon,
+  FileText,
+  Upload,
+  AlertCircle,
+  X,
+  Check
 } from 'lucide-react';
 import { cn } from './lib/utils';
 
 // --- Types ---
-interface UserProfile {
+export interface UserProfile {
   uid: string;
   displayName: string;
   photoURL?: string;
@@ -66,6 +79,13 @@ interface UserProfile {
     profileTitle: string;
     detailedAnalysis: string;
     readinessScore: number;
+  };
+  verificationData?: {
+    docType: 'national_id' | 'passport';
+    docUrl: string;
+    status: 'pending' | 'approved' | 'rejected';
+    submittedAt: any;
+    feedback?: string;
   };
 }
 
@@ -97,7 +117,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
           <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
             <Heart className="w-7 h-7 fill-current text-brand-gold" />
           </div>
-          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight">مودة</span>
+          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight">موثوق</span>
         </div>
 
         {user && profile && (
@@ -110,26 +130,79 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
               )}
             >
               <Compass className="w-4 h-4" />
-              <span>{isAdmin ? 'لوحة التحكم' : 'اكتشاف'}</span>
+              <span>{isAdmin ? 'لوحة التحكم' : 'ما قبل الزواج (مطابقة)'}</span>
               {currentView === 'dashboard' && (
                 <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
               )}
             </button>
+            
             {!isAdmin && (
-              <button 
-                onClick={() => setView('matches')}
-                className={cn(
-                  "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
-                  currentView === 'matches' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
-                )}
-              >
-                <Heart className="w-4 h-4" />
-                <span>المطابقات</span>
-                {currentView === 'matches' && (
-                  <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
-                )}
-              </button>
+              <>
+                <button 
+                  onClick={() => setView('preparation')}
+                  className={cn(
+                    "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
+                    currentView === 'preparation' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
+                  )}
+                >
+                  <Gift className="w-4 h-4" />
+                  <span>خدمات الزواج (تجهيز)</span>
+                  {currentView === 'preparation' && (
+                    <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
+                  )}
+                </button>
+
+                <button 
+                  onClick={() => setView('consultation')}
+                  className={cn(
+                    "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
+                    currentView === 'consultation' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
+                  )}
+                >
+                  <Headphones className="w-4 h-4" />
+                  <span>ما بعد الزواج (استشارة)</span>
+                  {currentView === 'consultation' && (
+                    <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
+                  )}
+                </button>
+
+                <button 
+                  onClick={() => setView('matches')}
+                  className={cn(
+                    "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
+                    currentView === 'matches' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
+                  )}
+                >
+                  <Heart className="w-4 h-4" />
+                  <span>المطابقات</span>
+                  {currentView === 'matches' && (
+                    <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
+                  )}
+                </button>
+
+                <button 
+                  onClick={() => setView('settings')}
+                  className={cn(
+                    "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
+                    currentView === 'settings' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
+                  )}
+                >
+                  <SettingsIcon className="w-4 h-4" />
+                  <span>الإعدادات</span>
+                  {currentView === 'settings' && (
+                    <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
+                  )}
+                </button>
+              </>
             )}
+          </div>
+        )}
+
+        {!user && (
+          <div className="hidden md:flex items-center gap-10">
+            <button onClick={() => document.getElementById('pre-marriage')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">ما قبل الزواج</button>
+            <button onClick={() => document.getElementById('marriage-services')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">خدمات الزواج</button>
+            <button onClick={() => document.getElementById('post-marriage')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">ما بعد الزواج</button>
           </div>
         )}
       </div>
@@ -175,6 +248,228 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
   );
 };
 
+const LandingPage = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoSignIn: () => void }) => {
+  return (
+    <div className="bg-brand-cream min-h-screen">
+      <LandingHero onSignIn={onSignIn} onDemoSignIn={onDemoSignIn} />
+      
+      {/* Pre-Marriage Section */}
+      <section id="pre-marriage" className="py-32 px-6 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-10"
+            >
+              <div className="inline-flex items-center gap-3 px-5 py-2 bg-brand-primary/5 rounded-full text-brand-primary text-[10px] font-bold uppercase tracking-[0.3em]">
+                <Compass className="w-4 h-4" />
+                <span>المرحلة الأولى: البحث والتعارف</span>
+              </div>
+              <h2 className="text-6xl md:text-7xl font-serif font-bold text-brand-primary leading-tight">
+                خدمات ما قبل الزواج <br />
+                <span className="text-brand-gold italic">الدقة في الاختيار</span>
+              </h2>
+              <p className="text-xl text-neutral-500 font-light leading-relaxed">
+                نبدأ معك الرحلة من الخطوة الأولى، حيث نوفر لك أدوات تحليل الشخصية المتقدمة والمطابقة الذكية المبنية على القيم والأهداف المشتركة لضمان بداية راسخة.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {[
+                  { title: "اختبار التوافق", desc: "تحليل عميق للشخصية والقيم." },
+                  { title: "مطابقة ذكية", desc: "خوارزميات تقترح الأنسب لك." },
+                  { title: "خصوصية تامة", desc: "تحكم كامل في ظهور بياناتك." },
+                  { title: "تحقق من الهوية", desc: "بيئة آمنة وموثوقة للجميع." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 p-6 bg-white rounded-3xl border border-brand-primary/5 shadow-sm">
+                    <div className="w-10 h-10 rounded-xl bg-brand-gold/10 flex items-center justify-center text-brand-gold shrink-0">
+                      <Check className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-brand-primary mb-1">{item.title}</h4>
+                      <p className="text-xs text-neutral-400 font-light">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="relative"
+            >
+              <div className="aspect-[4/5] rounded-[4rem] overflow-hidden shadow-premium border-8 border-white">
+                <img src="https://picsum.photos/seed/marriage-prep/800/1000" alt="Pre-marriage" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-brand-gold rounded-[3rem] p-10 text-white shadow-2xl flex flex-col justify-center">
+                <p className="text-5xl font-bold mb-2">95%</p>
+                <p className="text-xs font-bold uppercase tracking-widest opacity-80">نسبة نجاح المطابقة الأولية</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Marriage Services (Mawthoq) Section */}
+      <section id="marriage-services" className="py-32 px-6 bg-brand-primary relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
+        </div>
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-24 space-y-6">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="inline-flex items-center gap-3 px-5 py-2 bg-white/10 rounded-full text-brand-gold text-[10px] font-bold uppercase tracking-[0.3em]"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>المرحلة الثانية: ليلة العمر</span>
+            </motion.div>
+            <h2 className="text-6xl md:text-8xl font-serif font-bold text-white">
+              خدمات الزواج <span className="text-brand-gold italic">(موثوق)</span>
+            </h2>
+            <p className="text-xl text-white/60 max-w-2xl mx-auto font-light">
+              نحن شريكك في تنظيم أدق تفاصيل يومك الكبير، من القاعات الفاخرة إلى تجهيز منزل الزوجية بأرقى المعايير.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { icon: Home, title: "تجهيز المنزل", desc: "عروض حصرية على الأثاث والأجهزة من كبرى العلامات." },
+              { icon: Gift, title: "هدايا موثوق", desc: "باقات هدايا فاخرة وخصومات خاصة للمشتركين." },
+              { icon: Calendar, title: "تنظيم الحفلات", desc: "تنسيق كامل مع أرقى قاعات الأفراح والمصورين." },
+              { icon: Heart, title: "عروض السفر", desc: "وجهات استثنائية لشهر العسل بأسعار تفضيلية." }
+            ].map((service, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="p-10 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[3rem] hover:bg-white/10 transition-all group"
+              >
+                <div className="w-16 h-16 bg-brand-gold rounded-2xl flex items-center justify-center text-brand-primary mb-8 group-hover:scale-110 transition-transform">
+                  <service.icon className="w-8 h-8" />
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-white mb-4">{service.title}</h3>
+                <p className="text-sm text-white/50 leading-relaxed font-light">{service.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Post-Marriage Section */}
+      <section id="post-marriage" className="py-32 px-6 relative overflow-hidden bg-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              className="order-2 lg:order-1"
+            >
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-6 pt-12">
+                  <div className="aspect-square rounded-[3rem] overflow-hidden shadow-lg">
+                    <img src="https://picsum.photos/seed/consult-1/400/400" alt="Consultation" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="aspect-[3/4] rounded-[3rem] overflow-hidden shadow-lg">
+                    <img src="https://picsum.photos/seed/consult-2/400/533" alt="Consultation" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                </div>
+                <div className="space-y-6">
+                  <div className="aspect-[3/4] rounded-[3rem] overflow-hidden shadow-lg">
+                    <img src="https://picsum.photos/seed/consult-3/400/533" alt="Consultation" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                  <div className="aspect-square rounded-[3rem] overflow-hidden shadow-lg">
+                    <img src="https://picsum.photos/seed/consult-4/400/400" alt="Consultation" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+            <motion.div 
+              initial={{ opacity: 0, x: 50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="order-1 lg:order-2 space-y-10"
+            >
+              <div className="inline-flex items-center gap-3 px-5 py-2 bg-brand-secondary/5 rounded-full text-brand-secondary text-[10px] font-bold uppercase tracking-[0.3em]">
+                <Headphones className="w-4 h-4" />
+                <span>المرحلة الثالثة: الاستقرار والنمو</span>
+              </div>
+              <h2 className="text-6xl md:text-7xl font-serif font-bold text-brand-primary leading-tight">
+                خدمات ما بعد الزواج <br />
+                <span className="text-brand-secondary italic">رعاية مستمرة</span>
+              </h2>
+              <p className="text-xl text-neutral-500 font-light leading-relaxed">
+                نحن معك في كل خطوة، نوفر لك نخبة من المستشارين الأسريين والخبراء لمساعدتك في بناء حياة زوجية سعيدة ومستقرة وتجاوز التحديات بحكمة.
+              </p>
+              <ul className="space-y-6">
+                {[
+                  { title: "استشارات أسرية", desc: "جلسات خاصة مع خبراء معتمدين." },
+                  { title: "ورش عمل تفاعلية", desc: "دورات في مهارات التواصل والذكاء العاطفي." },
+                  { title: "دعم قانوني", desc: "استشارات قانونية متخصصة في شؤون الأسرة." },
+                  { title: "مجتمع موثوق", desc: "لقاءات وفعاليات حصرية للعائلات." }
+                ].map((item, i) => (
+                  <li key={i} className="flex items-center gap-6 group">
+                    <div className="w-3 h-3 rounded-full bg-brand-secondary group-hover:scale-150 transition-transform" />
+                    <div>
+                      <h4 className="font-bold text-brand-primary">{item.title}</h4>
+                      <p className="text-sm text-neutral-400 font-light">{item.desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-brand-primary py-20 px-6 border-t border-white/5">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16">
+          <div className="col-span-1 md:col-span-2 space-y-8">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white">
+                <Heart className="w-7 h-7 fill-current text-brand-gold" />
+              </div>
+              <span className="text-3xl font-serif font-bold text-white tracking-tight">موثوق</span>
+            </div>
+            <p className="text-white/40 max-w-sm leading-relaxed font-light">
+              المنصة الرائدة في العالم العربي للمطابقة الذكية والزواج الجاد، نجمع بين القيم الأصيلة والتقنيات الحديثة لبناء مستقبل أسري مستقر.
+            </p>
+          </div>
+          <div className="space-y-6">
+            <h4 className="text-brand-gold font-bold uppercase tracking-widest text-xs">روابط سريعة</h4>
+            <ul className="space-y-4 text-white/60 font-light">
+              <li><button className="hover:text-white transition-colors">عن موثوق</button></li>
+              <li><button className="hover:text-white transition-colors">الأسئلة الشائعة</button></li>
+              <li><button className="hover:text-white transition-colors">سياسة الخصوصية</button></li>
+              <li><button className="hover:text-white transition-colors">اتصل بنا</button></li>
+            </ul>
+          </div>
+          <div className="space-y-6">
+            <h4 className="text-brand-gold font-bold uppercase tracking-widest text-xs">تواصل معنا</h4>
+            <div className="flex gap-4">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 hover:bg-brand-gold hover:text-brand-primary transition-all cursor-pointer">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto mt-20 pt-10 border-t border-white/5 text-center">
+          <p className="text-white/20 text-[10px] font-bold uppercase tracking-[0.5em]">جميع الحقوق محفوظة © ٢٠٢٦ منصة موثوق الرقمية</p>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
 const LandingHero = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoSignIn: () => void }) => (
   <div className="min-h-screen flex flex-col items-center justify-center px-6 pt-20 text-center relative overflow-hidden">
     {/* Immersive Background */}
@@ -208,7 +503,7 @@ const LandingHero = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoS
       </h1>
       
       <p className="text-2xl text-neutral-500 mb-20 max-w-3xl mx-auto leading-relaxed text-balance font-light italic">
-        مودة هي منصة تجمع بين الأصالة والتقنية، نستخدم الذكاء الاصطناعي لتقريب المسافات بين القلوب الباحثة عن الاستقرار في بيئة آمنة ومحترمة.
+        موثوق هي منصة تجمع بين الأصالة والتقنية، نستخدم الذكاء الاصطناعي لتقريب المسافات بين القلوب الباحثة عن الاستقرار في بيئة آمنة ومحترمة.
       </p>
       
       <div className="flex flex-col sm:flex-row gap-8 justify-center items-center">
@@ -238,7 +533,7 @@ const LandingHero = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoS
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-brand-primary leading-none mb-1">+15,000</p>
-            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-[0.2em]">عضو يبحثون عن المودة</p>
+            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-[0.2em]">عضو يبحثون عن الاستقرار</p>
           </div>
         </div>
       </div>
@@ -311,7 +606,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
   const handleSubmit = async () => {
     const profile: UserProfile = {
       uid: user.uid,
-      displayName: user.displayName || 'مستخدم مودة',
+      displayName: user.displayName || 'مستخدم موثوق',
       ...formData,
       assessment: assessmentData || undefined,
       aiAnalysis: aiResult || undefined,
@@ -359,7 +654,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
               className="space-y-10"
             >
               <div className="text-center mb-10">
-                <p className="text-neutral-500 font-light text-lg">يرجى اختيار نوع الحساب للمتابعة في منصة مودة</p>
+                <p className="text-neutral-500 font-light text-lg">يرجى اختيار نوع الحساب للمتابعة في منصة موثوق</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -422,7 +717,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
                   />
                   <div className="space-y-2">
                     <h3 className="text-xl font-serif font-bold text-brand-primary">جاري تحليل إجاباتك...</h3>
-                    <p className="text-neutral-500">يقوم مساعد مودة الذكي برسم ملامح شخصيتك الآن.</p>
+                    <p className="text-neutral-500">يقوم مساعد موثوق الذكي برسم ملامح شخصيتك الآن.</p>
                   </div>
                 </div>
               ) : (
@@ -611,6 +906,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [stats, setStats] = useState({ totalUsers: 0, totalMatches: 0, pendingRequests: 0 });
   const [loading, setLoading] = useState(true);
+  const [reviewingUser, setReviewingUser] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     // Fetch all users
@@ -644,6 +940,18 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
       await updateDoc(doc(db, 'users', uid), { isVerified: !currentStatus });
     } catch (error) {
       console.error("Error updating verification status:", error);
+    }
+  };
+
+  const handleVerifyRequest = async (uid: string, approve: boolean) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { 
+        isVerified: approve,
+        'verificationData.status': approve ? 'approved' : 'rejected'
+      });
+      setReviewingUser(null);
+    } catch (error) {
+      console.error("Error handling verification request:", error);
     }
   };
 
@@ -819,6 +1127,8 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">المستخدم</th>
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">النوع</th>
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الجنس</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">تاريخ الميلاد</th>
+                  <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em] max-w-[200px]">النبذة</th>
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الحالة</th>
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">تاريخ التسجيل</th>
                   <th className="pb-8 text-[10px] font-bold text-neutral-400 uppercase tracking-[0.3em]">الإجراءات</th>
@@ -853,12 +1163,26 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
                       <span className="text-sm font-medium text-neutral-600 italic">{u.gender === 'male' ? 'ذكر' : 'أنثى'}</span>
                     </td>
                     <td className="py-8">
+                      <span className="text-xs font-medium text-neutral-500">
+                        {u.birthDate ? new Date(u.birthDate).toLocaleDateString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                      </span>
+                    </td>
+                    <td className="py-8 max-w-[200px]">
+                      <p className="text-xs text-neutral-400 line-clamp-2 italic font-light leading-relaxed" title={u.bio}>
+                        {u.bio ? (u.bio.length > 60 ? `${u.bio.substring(0, 60)}...` : u.bio) : '-'}
+                      </p>
+                    </td>
+                    <td className="py-8">
                       <div className="flex items-center gap-3">
                         <div className={cn(
                           "w-2.5 h-2.5 rounded-full",
-                          u.isVerified ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : "bg-neutral-300"
+                          u.isVerified ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" : 
+                          u.verificationData?.status === 'pending' ? "bg-brand-gold animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.5)]" :
+                          "bg-neutral-300"
                         )} />
-                        <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">{u.isVerified ? 'موثق' : 'غير موثق'}</span>
+                        <span className="text-xs font-bold text-neutral-600 uppercase tracking-widest">
+                          {u.isVerified ? 'موثق' : u.verificationData?.status === 'pending' ? 'بانتظار المراجعة' : 'غير موثق'}
+                        </span>
                       </div>
                     </td>
                     <td className="py-8">
@@ -866,6 +1190,15 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
                     </td>
                     <td className="py-8">
                       <div className="flex items-center gap-4">
+                        {u.verificationData?.status === 'pending' && (
+                          <button 
+                            onClick={() => setReviewingUser(u)}
+                            className="p-3 rounded-2xl text-brand-gold bg-brand-gold/5 border border-brand-gold/20 hover:bg-brand-gold hover:text-white transition-all hover:scale-110 active:scale-90 shadow-sm"
+                            title="مراجعة طلب التوثيق"
+                          >
+                            <FileText className="w-5 h-5" />
+                          </button>
+                        )}
                         <button 
                           onClick={() => toggleVerification(u.uid, !!u.isVerified)}
                           className={cn(
@@ -892,6 +1225,92 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
           </div>
         </div>
       </div>
+
+      {/* Verification Review Modal */}
+      <AnimatePresence>
+        {reviewingUser && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setReviewingUser(null)}
+              className="absolute inset-0 bg-brand-primary/40 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[4rem] p-12 max-w-2xl w-full shadow-2xl relative z-10 border border-white/20 overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-2 bg-brand-gold" />
+              
+              <div className="flex justify-between items-start mb-10">
+                <div className="flex items-center gap-6">
+                  <div className="w-20 h-20 rounded-3xl bg-brand-primary/5 flex items-center justify-center text-brand-primary">
+                    <Shield className="w-10 h-10" />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-serif font-bold text-brand-primary mb-2">مراجعة طلب التوثيق</h3>
+                    <p className="text-neutral-400 font-light italic">مراجعة مستندات المستخدم: {reviewingUser.displayName}</p>
+                  </div>
+                </div>
+                <button onClick={() => setReviewingUser(null)} className="p-4 bg-neutral-50 rounded-2xl text-neutral-400 hover:bg-neutral-100 transition-all">
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-8 mb-12">
+                <div className="p-8 bg-brand-cream/30 rounded-[2.5rem] border border-brand-primary/5">
+                  <p className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.3em] mb-4">نوع الوثيقة</p>
+                  <p className="text-xl font-bold text-brand-primary">
+                    {reviewingUser.verificationData?.docType === 'national_id' ? 'الهوية الوطنية' : 'جواز السفر'}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.3em]">معاينة الوثيقة</p>
+                  <div className="aspect-video bg-neutral-100 rounded-[2.5rem] overflow-hidden border border-neutral-200 shadow-inner group relative">
+                    <img 
+                      src={reviewingUser.verificationData?.docUrl} 
+                      alt="Verification Document" 
+                      className="w-full h-full object-contain"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-brand-primary/0 group-hover:bg-brand-primary/10 transition-all flex items-center justify-center">
+                      <a 
+                        href={reviewingUser.verificationData?.docUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="px-8 py-3 bg-white text-brand-primary rounded-full font-bold text-xs opacity-0 group-hover:opacity-100 transition-all shadow-xl"
+                      >
+                        فتح في نافذة جديدة
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-6">
+                <button 
+                  onClick={() => handleVerifyRequest(reviewingUser.uid, true)}
+                  className="flex-1 py-6 bg-brand-primary text-white rounded-[2rem] font-bold text-sm uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-brand-primary/20 flex items-center justify-center gap-3"
+                >
+                  <Check className="w-6 h-6" />
+                  <span>قبول التوثيق</span>
+                </button>
+                <button 
+                  onClick={() => handleVerifyRequest(reviewingUser.uid, false)}
+                  className="flex-1 py-6 bg-brand-cream text-brand-secondary rounded-[2rem] font-bold text-sm uppercase tracking-widest hover:bg-brand-secondary hover:text-white transition-all flex items-center justify-center gap-3"
+                >
+                  <X className="w-6 h-6" />
+                  <span>رفض الطلب</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
@@ -988,7 +1407,7 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   </div>
                   <div>
                     <span className="block text-[10px] font-bold uppercase tracking-[0.3em] text-brand-gold mb-1">تحليل الذكاء الاصطناعي</span>
-                    <h3 className="text-xl font-serif font-bold text-brand-primary">رؤية مودة الذكية</h3>
+                    <h3 className="text-xl font-serif font-bold text-brand-primary">رؤية موثوق الذكية</h3>
                   </div>
                 </div>
                 <h4 className="text-3xl font-serif font-bold text-brand-primary mb-6 leading-tight text-gold-gradient">{profile.aiAnalysis.profileTitle}</h4>
@@ -1172,6 +1591,397 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
   );
 };
 
+const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: UserProfile, onUpdateProfile: (p: UserProfile) => void }) => {
+  const [bio, setBio] = useState(profile.bio || '');
+  const [goals, setGoals] = useState(profile.goals || '');
+  const [values, setValues] = useState<string[]>(profile.values || []);
+  const [newValue, setNewValue] = useState('');
+  
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const [docType, setDocType] = useState<'national_id' | 'passport'>('national_id');
+  const [docUrl, setDocUrl] = useState('');
+  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false);
+
+  const handleUpdateProfile = async () => {
+    setIsUpdatingProfile(true);
+    try {
+      const updatedProfile = { ...profile, bio, goals, values };
+      await updateDoc(doc(db, 'users', profile.uid), { bio, goals, values });
+      onUpdateProfile(updatedProfile);
+      alert('تم تحديث الملف الشخصي بنجاح');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      alert('حدث خطأ أثناء تحديث الملف الشخصي');
+    } finally {
+      setIsUpdatingProfile(false);
+    }
+  };
+
+  const handleSubmitVerification = async () => {
+    setIsSubmittingVerification(true);
+    try {
+      const verificationData = {
+        docType,
+        docUrl,
+        status: 'pending',
+        submittedAt: serverTimestamp()
+      };
+      await updateDoc(doc(db, 'users', profile.uid), { verificationData });
+      onUpdateProfile({ ...profile, verificationData: { ...verificationData, submittedAt: new Date() } as any });
+      alert('تم إرسال طلب التوثيق بنجاح');
+    } catch (error) {
+      console.error('Error submitting verification:', error);
+      alert('حدث خطأ أثناء إرسال طلب التوثيق');
+    } finally {
+      setIsSubmittingVerification(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!newPassword) {
+      alert('يرجى إدخال كلمة مرور جديدة');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alert('كلمات المرور غير متطابقة');
+      return;
+    }
+    setIsChangingPassword(true);
+    try {
+      if (auth.currentUser) {
+        await updatePassword(auth.currentUser, newPassword);
+        alert('تم تغيير كلمة المرور بنجاح');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (error: any) {
+      console.error('Error changing password:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        alert('يرجى تسجيل الخروج والدخول مرة أخرى لتغيير كلمة المرور لدواعي أمنية');
+      } else {
+        alert('حدث خطأ أثناء تغيير كلمة المرور. قد يكون هذا بسبب تسجيل الدخول عبر Google.');
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في حذف حسابك؟ لا يمكن التراجع عن هذا الإجراء.')) return;
+    
+    setIsDeletingAccount(true);
+    try {
+      if (auth.currentUser) {
+        await deleteDoc(doc(db, 'users', profile.uid));
+        await deleteUser(auth.currentUser);
+        alert('تم حذف الحساب بنجاح');
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      if (error.code === 'auth/requires-recent-login') {
+        alert('يرجى تسجيل الخروج والدخول مرة أخرى لحذف الحساب لدواعي أمنية');
+      } else {
+        alert('حدث خطأ أثناء حذف الحساب');
+      }
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
+  const addValue = () => {
+    if (newValue.trim() && !values.includes(newValue.trim())) {
+      setValues([...values, newValue.trim()]);
+      setNewValue('');
+    }
+  };
+
+  const removeValue = (val: string) => {
+    setValues(values.filter(v => v !== val));
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-20 space-y-12">
+      <div className="text-center space-y-4">
+        <h2 className="text-5xl font-serif font-bold text-brand-primary">إعدادات الحساب</h2>
+        <p className="text-neutral-500 font-light">إدارة ملفك الشخصي وتفضيلات الأمان</p>
+      </div>
+
+      <section className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft space-y-8">
+        <div className="flex items-center gap-4 border-b border-neutral-50 pb-6">
+          <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary">
+            <UserIcon className="w-6 h-6" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold text-brand-primary">الملف الشخصي</h3>
+        </div>
+
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">النبذة الشخصية</label>
+            <textarea 
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              className="w-full p-6 bg-brand-cream/30 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[150px] transition-all"
+              placeholder="تحدث عن نفسك..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">الأهداف</label>
+            <textarea 
+              value={goals}
+              onChange={(e) => setGoals(e.target.value)}
+              className="w-full p-6 bg-brand-cream/30 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[100px] transition-all"
+              placeholder="ما هي أهدافك من الزواج؟"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <label className="text-sm font-bold text-brand-primary uppercase tracking-widest block">القيم الشخصية</label>
+            <div className="flex flex-wrap gap-3 mb-4">
+              {values.map(val => (
+                <span key={val} className="px-4 py-2 bg-brand-primary/5 text-brand-primary rounded-full text-xs font-bold flex items-center gap-2">
+                  {val}
+                  <button onClick={() => removeValue(val)} className="hover:text-brand-secondary transition-colors">×</button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <input 
+                type="text"
+                value={newValue}
+                onChange={(e) => setNewValue(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addValue()}
+                className="flex-1 px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                placeholder="أضف قيمة جديدة..."
+              />
+              <button 
+                onClick={addValue}
+                className="px-8 py-4 bg-brand-primary text-white rounded-2xl font-bold text-sm hover:scale-105 transition-all"
+              >
+                إضافة
+              </button>
+            </div>
+          </div>
+
+          <button 
+            onClick={handleUpdateProfile}
+            disabled={isUpdatingProfile}
+            className="w-full py-5 premium-gradient text-white rounded-[2rem] font-bold shadow-premium hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {isUpdatingProfile ? 'جاري التحديث...' : 'حفظ التغييرات'}
+          </button>
+        </div>
+      </section>
+
+      <section className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft space-y-8">
+        <div className="flex items-center gap-4 border-b border-neutral-50 pb-6">
+          <div className="w-12 h-12 bg-brand-secondary/10 rounded-2xl flex items-center justify-center text-brand-secondary">
+            <Shield className="w-6 h-6" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold text-brand-primary">توثيق الحساب</h3>
+        </div>
+
+        {profile.isVerified ? (
+          <div className="flex items-center gap-6 p-8 bg-green-50 rounded-[2rem] border border-green-100">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-green-200">
+              <CheckCircle2 className="w-10 h-10" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-green-900">حسابك موثق بنجاح</p>
+              <p className="text-green-700 font-light">تم التحقق من هويتك، شارة التوثيق تظهر الآن على ملفك الشخصي.</p>
+            </div>
+          </div>
+        ) : profile.verificationData?.status === 'pending' ? (
+          <div className="flex items-center gap-6 p-8 bg-brand-gold/5 rounded-[2rem] border border-brand-gold/10">
+            <div className="w-16 h-16 bg-brand-gold rounded-full flex items-center justify-center text-white shadow-lg shadow-brand-gold/20">
+              <Clock className="w-10 h-10" />
+            </div>
+            <div>
+              <p className="text-xl font-bold text-brand-gold">طلب التوثيق قيد المراجعة</p>
+              <p className="text-brand-gold/80 font-light">سيقوم فريق الإدارة بمراجعة مستنداتك قريباً.</p>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            <div className="p-8 bg-brand-cream/30 rounded-[2rem] border border-brand-primary/5 space-y-4">
+              <div className="flex items-center gap-3 text-brand-primary">
+                <AlertCircle className="w-5 h-5" />
+                <p className="font-bold">لماذا توثيق الحساب؟</p>
+              </div>
+              <p className="text-neutral-500 text-sm leading-relaxed">
+                التوثيق يزيد من مصداقية ملفك الشخصي بنسبة ٨٠٪ ويجذب شركاء أكثر جدية. يتطلب التوثيق رفع صورة واضحة للهوية الوطنية أو جواز السفر.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">نوع الوثيقة</label>
+                <select 
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value as any)}
+                  className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                >
+                  <option value="national_id">الهوية الوطنية</option>
+                  <option value="passport">جواز السفر</option>
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">رابط الوثيقة (لأغراض العرض)</label>
+                <input 
+                  type="text"
+                  value={docUrl}
+                  onChange={(e) => setDocUrl(e.target.value)}
+                  placeholder="أدخل رابط الصورة..."
+                  className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={handleSubmitVerification}
+              disabled={isSubmittingVerification || !docUrl}
+              className="w-full py-5 bg-brand-primary text-white rounded-[2rem] font-bold shadow-premium hover:scale-[1.02] transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+            >
+              <Upload className="w-5 h-5" />
+              {isSubmittingVerification ? 'جاري الإرسال...' : 'إرسال طلب التوثيق'}
+            </button>
+          </div>
+        )}
+      </section>
+
+      <section className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft space-y-8">
+        <div className="flex items-center gap-4 border-b border-neutral-50 pb-6">
+          <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center text-brand-gold">
+            <Lock className="w-6 h-6" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold text-brand-primary">الأمان</h3>
+        </div>
+
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">كلمة المرور الجديدة</label>
+              <input 
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-brand-primary uppercase tracking-widest">تأكيد كلمة المرور</label>
+              <input 
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+              />
+            </div>
+          </div>
+
+          <button 
+            onClick={handleChangePassword}
+            disabled={isChangingPassword}
+            className="w-full py-5 bg-brand-gold text-white rounded-[2rem] font-bold shadow-premium hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {isChangingPassword ? 'جاري التغيير...' : 'تغيير كلمة المرور'}
+          </button>
+        </div>
+      </section>
+
+      <section className="bg-rose-50 rounded-[3rem] p-10 border border-rose-100 space-y-8">
+        <div className="flex items-center gap-4 border-b border-rose-100 pb-6">
+          <div className="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center text-rose-600">
+            <Shield className="w-6 h-6" />
+          </div>
+          <h3 className="text-2xl font-serif font-bold text-rose-900">منطقة الخطر</h3>
+        </div>
+
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="text-right">
+            <p className="font-bold text-rose-900">حذف الحساب نهائياً</p>
+            <p className="text-sm text-rose-600 font-light">سيتم حذف جميع بياناتك ومطابقاتك ولا يمكن استعادتها.</p>
+          </div>
+          <button 
+            onClick={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            className="px-10 py-4 bg-rose-600 text-white rounded-2xl font-bold hover:bg-rose-700 transition-all disabled:opacity-50"
+          >
+            {isDeletingAccount ? 'جاري الحذف...' : 'حذف الحساب'}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const ConsultationView = () => (
+  <div className="py-20 text-center space-y-10">
+    <div className="w-32 h-32 bg-brand-primary/5 rounded-[3rem] flex items-center justify-center mx-auto shadow-premium">
+      <Headphones className="w-16 h-16 text-brand-primary" />
+    </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h2 className="text-5xl font-serif font-bold text-brand-primary">خدمات ما بعد الزواج</h2>
+      <p className="text-xl text-neutral-500 font-light leading-relaxed">
+        نحن معك في كل خطوة. نقدم جلسات إرشادية خاصة مع خبراء أسريين لضمان استقرار وسعادة حياتك الزوجية الجديدة.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
+        {[
+          { title: "جلسات إرشادية", desc: "تواصل مباشر مع مستشارين متخصصين." },
+          { title: "حل النزاعات", desc: "أدوات ومهارات للتعامل مع التحديات الأسرية." },
+          { title: "تطوير الذات", desc: "برامج لتعزيز النمو الشخصي داخل العلاقة." },
+          { title: "دعم مستمر", desc: "متابعة دورية لضمان جودة الحياة الزوجية." }
+        ].map((item, i) => (
+          <div key={i} className="p-8 bg-white rounded-[2rem] border border-brand-primary/5 shadow-soft hover:shadow-gold transition-all text-right">
+            <h3 className="font-bold text-brand-primary mb-2">{item.title}</h3>
+            <p className="text-sm text-neutral-400 font-light">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+      <button className="mt-12 px-12 py-5 premium-gradient text-white rounded-[2rem] font-bold text-lg shadow-premium hover:scale-105 transition-all">
+        حجز جلسة إرشادية
+      </button>
+    </div>
+  </div>
+);
+
+const PreparationView = () => (
+  <div className="py-20 text-center space-y-10">
+    <div className="w-32 h-32 bg-brand-gold/5 rounded-[3rem] flex items-center justify-center mx-auto shadow-premium">
+      <Gift className="w-16 h-16 text-brand-gold" />
+    </div>
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h2 className="text-5xl font-serif font-bold text-brand-primary">خدمات الزواج (تجهيز)</h2>
+      <p className="text-xl text-neutral-500 font-light leading-relaxed">
+        كل ما تحتاجه لبدء رحلتك الجديدة. نوفر لك أفضل العروض والخدمات لتجهيز منزلك وحفل زفافك بأعلى المعايير.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
+        {[
+          { title: "تجهيز المنزل", desc: "عروض حصرية على الأثاث والأجهزة الكهربائية." },
+          { title: "تنظيم الحفلات", desc: "تنسيق كامل لحفل الزفاف بأرقى القاعات." },
+          { title: "عروض السفر", desc: "باقات مميزة لشهر العسل في أجمل الوجهات." },
+          { title: "هدايا موثوق", desc: "خصومات خاصة لمشتركي المنصة من شركائنا." }
+        ].map((item, i) => (
+          <div key={i} className="p-8 bg-white rounded-[2rem] border border-brand-primary/5 shadow-soft hover:shadow-gold transition-all text-right">
+            <h3 className="font-bold text-brand-primary mb-2">{item.title}</h3>
+            <p className="text-sm text-neutral-400 font-light">{item.desc}</p>
+          </div>
+        ))}
+      </div>
+      <button className="mt-12 px-12 py-5 premium-gradient text-white rounded-[2rem] font-bold text-lg shadow-premium hover:scale-105 transition-all">
+        استكشف العروض الحصرية
+      </button>
+    </div>
+  </div>
+);
+
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -1283,9 +2093,11 @@ export default function App() {
       
       <main>
         {!user ? (
-          <LandingHero onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
+          <LandingPage onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
         ) : !profile ? (
-          <ProfileSetup user={user} onComplete={setProfile} />
+          <div className="pt-32 pb-20 px-6">
+            <ProfileSetup user={user} onComplete={setProfile} />
+          </div>
         ) : (
           <div className="min-h-screen pt-32 pb-20 px-6 max-w-7xl mx-auto">
             <AnimatePresence mode="wait">
@@ -1301,6 +2113,33 @@ export default function App() {
                   ) : (
                     <Dashboard user={user} profile={profile} />
                   )}
+                </motion.div>
+              ) : view === 'preparation' ? (
+                <motion.div
+                  key="preparation"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <PreparationView />
+                </motion.div>
+              ) : view === 'consultation' ? (
+                <motion.div
+                  key="consultation"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <ConsultationView />
+                </motion.div>
+              ) : view === 'settings' ? (
+                <motion.div
+                  key="settings"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                >
+                  <Settings user={user} profile={profile} onUpdateProfile={setProfile} />
                 </motion.div>
               ) : (
                 <motion.div

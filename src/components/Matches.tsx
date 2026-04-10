@@ -22,8 +22,21 @@ import {
   ChevronRight,
   Check,
   X,
-  Sparkles
+  Sparkles,
+  Filter,
+  ArrowUpDown,
+  Calendar,
+  BrainCircuit,
+  ShieldCheck,
+  Star,
+  Target,
+  Users,
+  Wallet,
+  Smile,
+  MapPin,
+  Brain
 } from 'lucide-react';
+import { UserProfile } from '../App';
 import { cn } from '../lib/utils';
 
 interface MatchRequest {
@@ -37,17 +50,15 @@ interface MatchRequest {
 }
 
 interface MatchWithProfile extends MatchRequest {
-  otherProfile?: {
-    displayName: string;
-    photoURL?: string;
-    gender: string;
-    birthDate: string;
-  };
+  otherProfile?: UserProfile;
 }
 
 export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: string, onStartChat: (uid: string, name: string) => void }) => {
   const [matches, setMatches] = useState<MatchWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     const q = query(
@@ -95,73 +106,373 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
     );
   }
 
-  const pendingMatches = matches.filter(m => m.status === 'pending');
-  const acceptedMatches = matches.filter(m => m.status === 'accepted');
+  const filteredMatches = matches
+    .filter(m => filterStatus === 'all' || m.status === filterStatus)
+    .sort((a, b) => {
+      const dateA = a.createdAt?.seconds || 0;
+      const dateB = b.createdAt?.seconds || 0;
+      return sortOrder === 'desc' ? dateB - dateA : dateA - dateB;
+    });
+
+  const pendingMatches = filteredMatches.filter(m => m.status === 'pending');
+  const acceptedMatches = filteredMatches.filter(m => m.status === 'accepted');
+  const rejectedMatches = filteredMatches.filter(m => m.status === 'rejected');
 
   return (
     <div className="space-y-16">
-      <section>
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center text-brand-gold">
-            <Clock className="w-6 h-6" />
+      {/* Controls */}
+      <div className="flex flex-wrap items-center justify-between gap-6 bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/40 shadow-soft">
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center text-brand-primary">
+            <Filter className="w-5 h-5" />
           </div>
-          <div>
-            <h2 className="text-4xl font-serif font-bold text-brand-primary">طلبات بانتظار الرد</h2>
-            <p className="text-neutral-400 text-sm font-light">طلبات تواصل رسمية في انتظار قرارك أو قرار الطرف الآخر</p>
+          <div className="flex gap-2">
+            {(['all', 'pending', 'accepted', 'rejected'] as const).map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                className={cn(
+                  "px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all border",
+                  filterStatus === status 
+                    ? "bg-brand-primary text-white border-brand-primary shadow-lg shadow-brand-primary/20" 
+                    : "bg-white text-neutral-400 border-neutral-100 hover:border-brand-primary/20 hover:text-brand-primary"
+                )}
+              >
+                {status === 'all' ? 'الكل' : status === 'pending' ? 'قيد الانتظار' : status === 'accepted' ? 'مقبول' : 'معتذر'}
+              </button>
+            ))}
           </div>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {pendingMatches.length > 0 ? (
-            pendingMatches.map((match, i) => (
-              <MatchCard 
-                key={match.id} 
-                match={match} 
-                index={i} 
-                isOwnRequest={match.fromUid === currentUserUid} 
-                onStartChat={onStartChat}
-                currentUserUid={currentUserUid}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/30 italic text-neutral-400">
-              لا توجد طلبات معلقة حالياً.
-            </div>
-          )}
-        </div>
-      </section>
 
-      <section>
-        <div className="flex items-center gap-4 mb-10">
-          <div className="w-12 h-12 bg-brand-secondary/10 rounded-2xl flex items-center justify-center text-brand-secondary">
-            <Heart className="w-6 h-6 fill-current" />
+        <div className="flex items-center gap-4">
+          <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+            <ArrowUpDown className="w-5 h-5" />
           </div>
-          <div>
-            <h2 className="text-4xl font-serif font-bold text-brand-primary">مطابقات ناجحة</h2>
-            <p className="text-neutral-400 text-sm font-light">الأعضاء الذين تم التوافق معهم وبدء رحلة التعارف</p>
-          </div>
+          <button
+            onClick={() => setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc')}
+            className="flex items-center gap-3 px-6 py-2.5 bg-white border border-neutral-100 rounded-full text-[10px] font-bold text-neutral-600 uppercase tracking-widest hover:border-brand-gold/20 hover:text-brand-gold transition-all"
+          >
+            <Calendar className="w-4 h-4" />
+            <span>التاريخ: {sortOrder === 'desc' ? 'الأحدث' : 'الأقدم'}</span>
+          </button>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-          {acceptedMatches.length > 0 ? (
-            acceptedMatches.map((match, i) => (
-              <MatchCard 
-                key={match.id} 
-                match={match} 
-                index={i} 
-                isOwnRequest={match.fromUid === currentUserUid} 
-                onStartChat={onStartChat}
-                currentUserUid={currentUserUid}
-              />
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/30 italic text-neutral-400">
-              لم يتم قبول أي مطابقات بعد.
+      </div>
+
+      {filterStatus === 'all' ? (
+        <>
+          <section>
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-12 h-12 bg-brand-gold/10 rounded-2xl flex items-center justify-center text-brand-gold">
+                <Clock className="w-6 h-6" />
+              </div>
+              <div>
+                <h2 className="text-4xl font-serif font-bold text-brand-primary">طلبات بانتظار الرد</h2>
+                <p className="text-neutral-400 text-sm font-light">طلبات تواصل رسمية في انتظار قرارك أو قرار الطرف الآخر</p>
+              </div>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {pendingMatches.length > 0 ? (
+                pendingMatches.map((match, i) => (
+                  <MatchCard 
+                    key={match.id} 
+                    match={match} 
+                    index={i} 
+                    isOwnRequest={match.fromUid === currentUserUid} 
+                    onStartChat={onStartChat}
+                    currentUserUid={currentUserUid}
+                    onViewProfile={setSelectedProfile}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/30 italic text-neutral-400">
+                  لا توجد طلبات معلقة حالياً.
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-12 h-12 bg-brand-secondary/10 rounded-2xl flex items-center justify-center text-brand-secondary">
+                <Heart className="w-6 h-6 fill-current" />
+              </div>
+              <div>
+                <h2 className="text-4xl font-serif font-bold text-brand-primary">مطابقات ناجحة</h2>
+                <p className="text-neutral-400 text-sm font-light">الأعضاء الذين تم التوافق معهم وبدء رحلة التعارف</p>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {acceptedMatches.length > 0 ? (
+                acceptedMatches.map((match, i) => (
+                  <MatchCard 
+                    key={match.id} 
+                    match={match} 
+                    index={i} 
+                    isOwnRequest={match.fromUid === currentUserUid} 
+                    onStartChat={onStartChat}
+                    currentUserUid={currentUserUid}
+                    onViewProfile={setSelectedProfile}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/30 italic text-neutral-400">
+                  لم يتم قبول أي مطابقات بعد.
+                </div>
+              )}
+            </div>
+          </section>
+
+          {rejectedMatches.length > 0 && (
+            <section>
+              <div className="flex items-center gap-4 mb-10">
+                <div className="w-12 h-12 bg-neutral-100 rounded-2xl flex items-center justify-center text-neutral-400">
+                  <XCircle className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-4xl font-serif font-bold text-brand-primary">طلبات معتذر عنها</h2>
+                  <p className="text-neutral-400 text-sm font-light">الطلبات التي لم يتم التوافق عليها</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                {rejectedMatches.map((match, i) => (
+                  <MatchCard 
+                    key={match.id} 
+                    match={match} 
+                    index={i} 
+                    isOwnRequest={match.fromUid === currentUserUid} 
+                    onStartChat={onStartChat}
+                    currentUserUid={currentUserUid}
+                    onViewProfile={setSelectedProfile}
+                  />
+                ))}
+              </div>
+            </section>
           )}
-        </div>
-      </section>
+        </>
+      ) : (
+        <section>
+          <div className="flex items-center gap-4 mb-10">
+            <div className="w-12 h-12 bg-brand-primary/10 rounded-2xl flex items-center justify-center text-brand-primary">
+              {filterStatus === 'pending' ? <Clock className="w-6 h-6" /> : filterStatus === 'accepted' ? <Heart className="w-6 h-6 fill-current" /> : <XCircle className="w-6 h-6" />}
+            </div>
+            <div>
+              <h2 className="text-4xl font-serif font-bold text-brand-primary">
+                {filterStatus === 'pending' ? 'طلبات قيد الانتظار' : filterStatus === 'accepted' ? 'المطابقات المقبولة' : 'الطلبات المعتذر عنها'}
+              </h2>
+              <p className="text-neutral-400 text-sm font-light">نتائج البحث المصفاة بناءً على اختيارك</p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            {filteredMatches.length > 0 ? (
+              filteredMatches.map((match, i) => (
+                <MatchCard 
+                  key={match.id} 
+                  match={match} 
+                  index={i} 
+                  isOwnRequest={match.fromUid === currentUserUid} 
+                  onStartChat={onStartChat}
+                  currentUserUid={currentUserUid}
+                  onViewProfile={setSelectedProfile}
+                />
+              ))
+            ) : (
+              <div className="col-span-full py-20 text-center bg-white/40 backdrop-blur-xl rounded-[3rem] border border-white/30 italic text-neutral-400">
+                لا توجد نتائج تطابق هذا الفلتر.
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      <AnimatePresence>
+        {selectedProfile && (
+          <ProfileModal 
+            profile={selectedProfile} 
+            onClose={() => setSelectedProfile(null)} 
+          />
+        )}
+      </AnimatePresence>
     </div>
+  );
+};
+
+const ProfileModal = ({ profile, onClose }: { profile: UserProfile, onClose: () => void }) => {
+  const calculateAge = (birthDate: string) => {
+    const today = new Date();
+    const birth = new Date(birthDate);
+    let age = today.getFullYear() - birth.getFullYear();
+    const m = today.getMonth() - birth.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) age--;
+    return age;
+  };
+
+  return (
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10"
+    >
+      <div className="absolute inset-0 bg-brand-primary/40 backdrop-blur-md" onClick={onClose} />
+      
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        className="bg-brand-cream w-full max-w-4xl max-h-[90vh] rounded-[4rem] shadow-premium overflow-hidden relative flex flex-col"
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-8 left-8 z-20 w-12 h-12 bg-white/20 backdrop-blur-md hover:bg-white/40 rounded-full flex items-center justify-center text-white transition-all"
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        <div className="overflow-y-auto flex-grow custom-scrollbar">
+          {/* Hero Header */}
+          <div className="relative h-80 sm:h-96">
+            <img 
+              src={profile.photoURL || `https://ui-avatars.com/api/?name=${profile.displayName}&background=random`} 
+              alt={profile.displayName} 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-brand-primary via-brand-primary/20 to-transparent" />
+            
+            <div className="absolute bottom-10 right-10 left-10 text-right">
+              <div className="flex items-center gap-4 mb-4">
+                <h2 className="text-4xl sm:text-6xl font-serif font-bold text-white">{profile.displayName}</h2>
+                {profile.isVerified && (
+                  <div className="w-8 h-8 bg-brand-gold rounded-full flex items-center justify-center text-brand-primary shadow-lg">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-4">
+                <div className="px-6 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-sm font-bold">
+                  {calculateAge(profile.birthDate)} سنة
+                </div>
+                <div className="px-6 py-2 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-white text-sm font-bold">
+                  {profile.gender === 'male' ? 'رجل' : 'امرأة'}
+                </div>
+                {profile.aiAnalysis?.profileTitle && (
+                  <div className="px-6 py-2 bg-brand-gold text-brand-primary rounded-full text-sm font-bold shadow-lg">
+                    {profile.aiAnalysis.profileTitle}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-10 sm:p-16 space-y-16">
+            {/* Bio */}
+            <section className="space-y-6">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-brand-primary/5 rounded-xl flex items-center justify-center text-brand-primary">
+                  <UserIcon className="w-5 h-5" />
+                </div>
+                <h3 className="text-2xl font-serif font-bold text-brand-primary">نبذة تعريفية</h3>
+              </div>
+              <p className="text-xl text-neutral-500 font-light leading-relaxed text-right">
+                {profile.bio || "لا توجد نبذة تعريفية متاحة."}
+              </p>
+            </section>
+
+            {/* Values & Goals */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              <section className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                    <Star className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-brand-primary">القيم والمبادئ</h3>
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {profile.values?.map((val, i) => (
+                    <span key={i} className="px-5 py-2 bg-white border border-brand-primary/5 rounded-2xl text-sm text-neutral-600 shadow-sm">
+                      {val}
+                    </span>
+                  ))}
+                </div>
+              </section>
+
+              <section className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand-secondary/10 rounded-xl flex items-center justify-center text-brand-secondary">
+                    <Target className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-brand-primary">أهداف الزواج</h3>
+                </div>
+                <p className="text-neutral-500 font-light leading-relaxed">
+                  {profile.goals || "لم يتم تحديد أهداف الزواج بعد."}
+                </p>
+              </section>
+            </div>
+
+            {/* AI Analysis */}
+            {profile.aiAnalysis && (
+              <section className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft space-y-8 relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-brand-gold" />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-brand-primary/5 rounded-2xl flex items-center justify-center text-brand-primary">
+                      <BrainCircuit className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-serif font-bold text-brand-primary">تحليل موثوق الذكي</h3>
+                      <p className="text-xs text-brand-gold font-bold uppercase tracking-widest">بناءً على اختبار الشخصية</p>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest mb-1">جاهزية الزواج</p>
+                    <div className="text-3xl font-bold text-brand-primary">{profile.aiAnalysis.readinessScore}%</div>
+                  </div>
+                </div>
+                <p className="text-neutral-500 font-light leading-relaxed italic border-r-4 border-brand-gold/20 pr-6">
+                  {profile.aiAnalysis.detailedAnalysis}
+                </p>
+              </section>
+            )}
+
+            {/* Assessment Strengths */}
+            {profile.assessment && (
+              <section className="space-y-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand-primary/5 rounded-xl flex items-center justify-center text-brand-primary">
+                    <Sparkles className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-brand-primary">سمات الشخصية</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[
+                    { label: 'أسلوب النقاش', value: profile.assessment.conflictStyle, icon: Brain },
+                    { label: 'الأولوية الحالية', value: profile.assessment.lifePriority, icon: Target },
+                    { label: 'النمط الاجتماعي', value: profile.assessment.socialPreference, icon: Users },
+                    { label: 'النظرة المالية', value: profile.assessment.financialView, icon: Wallet },
+                    { label: 'القيم التقليدية', value: profile.assessment.traditionalValues, icon: Heart }
+                  ].map((item, i) => (
+                    <div key={i} className="p-6 bg-white rounded-3xl border border-brand-primary/5 shadow-sm flex items-center gap-4">
+                      <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold shrink-0">
+                        <item.icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{item.label}</p>
+                        <p className="text-sm font-bold text-brand-primary">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
@@ -170,13 +481,15 @@ const MatchCard = ({
   index, 
   isOwnRequest,
   onStartChat,
-  currentUserUid
+  currentUserUid,
+  onViewProfile
 }: { 
   match: MatchWithProfile, 
   index: number, 
   isOwnRequest: boolean,
   onStartChat: (uid: string, name: string) => void,
-  currentUserUid: string
+  currentUserUid: string,
+  onViewProfile: (profile: UserProfile) => void
 }) => {
   const [processing, setProcessing] = useState(false);
 
@@ -216,17 +529,25 @@ const MatchCard = ({
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 hover:border-brand-primary/10 hover:shadow-gold transition-all duration-500 group relative overflow-hidden"
+      className="bg-white rounded-[3.5rem] p-10 border border-brand-primary/5 hover:border-brand-primary/10 hover:shadow-premium transition-all duration-500 group relative overflow-hidden flex flex-col h-full"
     >
-      <div className="absolute top-0 right-0 w-40 h-40 bg-brand-gold/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:bg-brand-gold/10 transition-all" />
+      <div className="absolute top-0 right-0 w-64 h-64 bg-brand-gold/5 rounded-full -mr-32 -mt-32 blur-3xl group-hover:bg-brand-gold/10 transition-all" />
       
-      <div className="flex items-start justify-between mb-10 relative z-10">
+      {/* Header: Profile & Status */}
+      <div className="flex items-start justify-between mb-8 relative z-10">
         <div className="flex items-center gap-6">
-          <div className="w-24 h-24 bg-brand-cream rounded-[2rem] flex items-center justify-center text-brand-primary shadow-inner group-hover:scale-105 transition-transform overflow-hidden">
-            <img src={match.otherProfile?.photoURL || `https://ui-avatars.com/api/?name=${match.otherProfile?.displayName}&background=random`} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+          <div className="relative">
+            <div className="w-24 h-24 bg-brand-cream rounded-[2.5rem] flex items-center justify-center text-brand-primary shadow-inner group-hover:scale-105 transition-transform overflow-hidden border-2 border-white">
+              <img src={match.otherProfile?.photoURL || `https://ui-avatars.com/api/?name=${match.otherProfile?.displayName}&background=random`} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            </div>
+            {match.status === 'accepted' && (
+              <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full border-4 border-white flex items-center justify-center text-white shadow-lg">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+            )}
           </div>
           <div>
-            <h3 className="text-3xl font-serif font-bold text-brand-primary mb-2">{match.otherProfile?.displayName || 'مستخدم مودة'}</h3>
+            <h3 className="text-3xl font-serif font-bold text-brand-primary mb-2">{match.otherProfile?.displayName || 'مستخدم موثوق'}</h3>
             <div className={cn(
               "inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] border shadow-sm",
               statusColors[match.status as keyof typeof statusColors]
@@ -236,27 +557,69 @@ const MatchCard = ({
             </div>
           </div>
         </div>
-        
-        {match.compatibilityScore && (
-          <div className="text-center bg-brand-gold/5 p-4 rounded-[1.5rem] border border-brand-gold/10 shadow-sm">
-            <span className="block text-2xl font-bold text-brand-gold leading-none mb-1">{match.compatibilityScore}%</span>
-            <span className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.2em]">توافق</span>
-          </div>
-        )}
       </div>
 
-      <div className="space-y-6 mb-10 relative z-10">
-        <div className="flex items-start gap-4 text-base text-neutral-500">
-          <div className="w-10 h-10 rounded-xl bg-neutral-50 flex items-center justify-center shrink-0">
-            <Sparkles className="w-5 h-5 text-brand-gold" />
+      {/* Compatibility Section - More Prominent */}
+      {match.compatibilityScore && (
+        <div className="relative mb-8 z-10">
+          <div className="bg-brand-cream/40 rounded-[2.5rem] p-8 border border-brand-gold/10 flex items-center justify-between overflow-hidden group/score">
+            <div className="absolute top-0 right-0 w-32 h-full bg-brand-gold/5 skew-x-12 -mr-16" />
+            <div className="relative z-10">
+              <p className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em] mb-1">نسبة التوافق</p>
+              <h4 className="text-5xl font-bold text-brand-primary tracking-tighter">
+                {match.compatibilityScore}<span className="text-2xl text-brand-gold ml-1">%</span>
+              </h4>
+            </div>
+            <div className="relative z-10 w-20 h-20">
+              <svg className="w-full h-full transform -rotate-90">
+                <circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  fill="transparent"
+                  className="text-brand-gold/10"
+                />
+                <motion.circle
+                  cx="40"
+                  cy="40"
+                  r="36"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  fill="transparent"
+                  strokeDasharray={226}
+                  initial={{ strokeDashoffset: 226 }}
+                  animate={{ strokeDashoffset: 226 - (226 * match.compatibilityScore) / 100 }}
+                  transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                  className="text-brand-gold"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-brand-gold animate-pulse" />
+              </div>
+            </div>
           </div>
-          <p className="line-clamp-2 leading-relaxed italic font-light">
-            {match.analysis || "تحليل التوافق الذكي متاح للمطابقات المقبولة لبناء جسور التفاهم."}
+        </div>
+      )}
+
+      {/* AI Analysis Section - Dedicated Section */}
+      <div className="flex-grow mb-10 relative z-10">
+        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 border border-brand-primary/5 h-full">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-brand-primary/5 flex items-center justify-center">
+              <BrainCircuit className="w-4 h-4 text-brand-primary" />
+            </div>
+            <span className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.2em]">تحليل موثوق الذكي</span>
+          </div>
+          <p className="text-sm leading-relaxed text-neutral-500 italic font-light">
+            {match.analysis || "تحليل التوافق الذكي متاح للمطابقات المقبولة لبناء جسور التفاهم والانسجام بين الطرفين."}
           </p>
         </div>
       </div>
 
-      <div className="flex gap-4 relative z-10">
+      {/* Actions */}
+      <div className="flex gap-4 relative z-10 mt-auto">
         {match.status === 'pending' && !isOwnRequest ? (
           <div className="flex gap-4 w-full">
             <button 
@@ -278,7 +641,10 @@ const MatchCard = ({
           </div>
         ) : (
           <>
-            <button className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn">
+            <button 
+              onClick={() => match.otherProfile && onViewProfile(match.otherProfile)}
+              className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn"
+            >
               <span>عرض الملف الكامل</span>
               <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
             </button>

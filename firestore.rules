@@ -21,9 +21,8 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if isAuthenticated() && (isOwner(userId) || resource.data.isPublic == true);
-      allow create: if isOwner(userId) && isValidUser(request.resource.data);
-      allow update: if isOwner(userId) && isValidUser(request.resource.data) && 
-                    request.resource.data.createdAt == resource.data.createdAt;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) || (isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
     }
 
     match /matches/{matchId} {
