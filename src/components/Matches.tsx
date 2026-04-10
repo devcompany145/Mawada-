@@ -35,7 +35,10 @@ import {
   Smile,
   MapPin,
   Brain,
-  Search
+  Search,
+  Settings,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { UserProfile } from '../App';
 import { cn } from '../lib/utils';
@@ -60,6 +63,11 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all');
   const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
   const [searchTerm, setSearchTerm] = useState('');
+  const [displaySettings, setDisplaySettings] = useState({
+    showBio: false,
+    showValues: false,
+    showAiAnalysis: true
+  });
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -163,6 +171,41 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
               className="pr-14 pl-6 py-2.5 bg-white border border-neutral-100 rounded-full text-xs font-medium text-brand-primary placeholder:text-neutral-400 focus:ring-2 focus:ring-brand-primary/10 focus:border-brand-primary/20 outline-none w-64 transition-all"
             />
           </div>
+
+          <div className="flex items-center gap-3 bg-brand-cream/50 p-1.5 rounded-full border border-brand-primary/5">
+            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-brand-primary shadow-sm">
+              <Settings className="w-4 h-4" />
+            </div>
+            <div className="flex gap-1">
+              <button 
+                onClick={() => setDisplaySettings(prev => ({ ...prev, showBio: !prev.showBio }))}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                  displaySettings.showBio ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
+                )}
+              >
+                النبذة
+              </button>
+              <button 
+                onClick={() => setDisplaySettings(prev => ({ ...prev, showValues: !prev.showValues }))}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                  displaySettings.showValues ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
+                )}
+              >
+                القيم
+              </button>
+              <button 
+                onClick={() => setDisplaySettings(prev => ({ ...prev, showAiAnalysis: !prev.showAiAnalysis }))}
+                className={cn(
+                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
+                  displaySettings.showAiAnalysis ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
+                )}
+              >
+                التحليل
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
@@ -203,6 +246,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
                     onStartChat={onStartChat}
                     currentUserUid={currentUserUid}
                     onViewProfile={setSelectedProfile}
+                    displaySettings={displaySettings}
                   />
                 ))
               ) : (
@@ -235,6 +279,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
                     onStartChat={onStartChat}
                     currentUserUid={currentUserUid}
                     onViewProfile={setSelectedProfile}
+                    displaySettings={displaySettings}
                   />
                 ))
               ) : (
@@ -267,6 +312,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
                     onStartChat={onStartChat}
                     currentUserUid={currentUserUid}
                     onViewProfile={setSelectedProfile}
+                    displaySettings={displaySettings}
                   />
                 ))}
               </div>
@@ -298,6 +344,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
                   onStartChat={onStartChat}
                   currentUserUid={currentUserUid}
                   onViewProfile={setSelectedProfile}
+                  displaySettings={displaySettings}
                 />
               ))
             ) : (
@@ -503,14 +550,16 @@ const MatchCard = ({
   isOwnRequest,
   onStartChat,
   currentUserUid,
-  onViewProfile
+  onViewProfile,
+  displaySettings
 }: { 
   match: MatchWithProfile, 
   index: number, 
   isOwnRequest: boolean,
   onStartChat: (uid: string, name: string) => void,
   currentUserUid: string,
-  onViewProfile: (profile: UserProfile) => void
+  onViewProfile: (profile: UserProfile) => void,
+  displaySettings: { showBio: boolean, showValues: boolean, showAiAnalysis: boolean }
 }) => {
   const [processing, setProcessing] = useState(false);
 
@@ -580,64 +629,107 @@ const MatchCard = ({
         </div>
       </div>
 
-      {/* Compatibility Section - More Prominent */}
+      {/* Optional Details */}
+      <div className="relative z-10 space-y-4 mb-6">
+        {displaySettings.showBio && match.otherProfile?.bio && (
+          <p className="text-xs text-neutral-500 line-clamp-2 italic font-light leading-relaxed border-r-2 border-brand-gold/20 pr-3">
+            "{match.otherProfile.bio}"
+          </p>
+        )}
+        
+        {displaySettings.showValues && match.otherProfile?.values && match.otherProfile.values.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {match.otherProfile.values.slice(0, 3).map((val, i) => (
+              <span key={i} className="px-3 py-1 bg-brand-gold/5 border border-brand-gold/10 rounded-lg text-[9px] text-brand-gold font-bold">
+                {val}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Compatibility Section - Premium Display */}
       {match.compatibilityScore && (
         <div className="relative mb-8 z-10">
-          <div className="bg-brand-cream/40 rounded-[2.5rem] p-8 border border-brand-gold/10 flex items-center justify-between overflow-hidden group/score">
-            <div className="absolute top-0 right-0 w-32 h-full bg-brand-gold/5 skew-x-12 -mr-16" />
+          <div className="bg-gradient-to-br from-brand-primary/5 to-brand-gold/5 rounded-[2.5rem] p-8 border border-brand-gold/20 flex items-center justify-between overflow-hidden group/score relative">
+            <div className="absolute top-0 right-0 w-40 h-full bg-brand-gold/10 skew-x-12 -mr-20 blur-2xl" />
             <div className="relative z-10">
-              <p className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em] mb-1">نسبة التوافق</p>
-              <h4 className="text-5xl font-bold text-brand-primary tracking-tighter">
-                {match.compatibilityScore}<span className="text-2xl text-brand-gold ml-1">%</span>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-3.5 h-3.5 text-brand-gold" />
+                <p className="text-[10px] font-bold text-brand-gold uppercase tracking-[0.3em]">نسبة التوافق</p>
+              </div>
+              <h4 className="text-6xl font-bold text-brand-primary tracking-tighter flex items-baseline">
+                {match.compatibilityScore}
+                <span className="text-2xl text-brand-gold ml-1 font-serif">%</span>
               </h4>
+              <p className="text-[9px] text-neutral-400 font-medium mt-1">بناءً على تحليل القيم والأهداف</p>
             </div>
-            <div className="relative z-10 w-20 h-20">
-              <svg className="w-full h-full transform -rotate-90">
+            <div className="relative z-10 w-24 h-24">
+              <svg className="w-full h-full transform -rotate-90 drop-shadow-lg">
                 <circle
-                  cx="40"
-                  cy="40"
-                  r="36"
+                  cx="48"
+                  cy="48"
+                  r="42"
                   stroke="currentColor"
-                  strokeWidth="6"
+                  strokeWidth="8"
                   fill="transparent"
                   className="text-brand-gold/10"
                 />
                 <motion.circle
-                  cx="40"
-                  cy="40"
-                  r="36"
+                  cx="48"
+                  cy="48"
+                  r="42"
                   stroke="currentColor"
-                  strokeWidth="6"
+                  strokeWidth="8"
                   fill="transparent"
-                  strokeDasharray={226}
-                  initial={{ strokeDashoffset: 226 }}
-                  animate={{ strokeDashoffset: 226 - (226 * match.compatibilityScore) / 100 }}
-                  transition={{ duration: 1.5, ease: "easeOut", delay: 0.5 }}
+                  strokeDasharray={264}
+                  initial={{ strokeDashoffset: 264 }}
+                  animate={{ strokeDashoffset: 264 - (264 * match.compatibilityScore) / 100 }}
+                  transition={{ duration: 2, ease: "circOut", delay: 0.5 }}
+                  strokeLinecap="round"
                   className="text-brand-gold"
                 />
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <Sparkles className="w-6 h-6 text-brand-gold animate-pulse" />
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-inner">
+                  <Heart className={cn("w-6 h-6", match.compatibilityScore > 80 ? "text-brand-secondary fill-current" : "text-brand-gold")} />
+                </div>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* AI Analysis Section - Dedicated Section */}
-      <div className="flex-grow mb-10 relative z-10">
-        <div className="bg-white/50 backdrop-blur-sm rounded-[2.5rem] p-8 border border-brand-primary/5 h-full">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-brand-primary/5 flex items-center justify-center">
-              <BrainCircuit className="w-4 h-4 text-brand-primary" />
+      {/* AI Analysis Section - Premium Glassmorphism */}
+      {displaySettings.showAiAnalysis && (
+        <div className="flex-grow mb-10 relative z-10">
+          <div className="bg-brand-primary/5 backdrop-blur-sm rounded-[2.5rem] p-8 border border-brand-primary/10 h-full relative overflow-hidden group/ai">
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-brand-primary/5 rounded-full blur-3xl group-hover/ai:bg-brand-primary/10 transition-all" />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-brand-primary text-white flex items-center justify-center shadow-lg shadow-brand-primary/20">
+                    <BrainCircuit className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.2em] block">تحليل موثوق الذكي</span>
+                    <span className="text-[8px] text-brand-gold font-bold uppercase tracking-widest">AI Insights</span>
+                  </div>
+                </div>
+                <div className="px-3 py-1 bg-brand-gold/10 rounded-full border border-brand-gold/20 text-[8px] font-bold text-brand-gold uppercase tracking-widest">
+                  دقة عالية
+                </div>
+              </div>
+              <div className="relative">
+                <div className="absolute top-0 right-0 w-1 h-full bg-brand-gold/20 rounded-full" />
+                <p className="text-sm leading-relaxed text-neutral-600 italic font-light pr-6">
+                  {match.analysis || "تحليل التوافق الذكي متاح للمطابقات المقبولة لبناء جسور التفاهم والانسجام بين الطرفين."}
+                </p>
+              </div>
             </div>
-            <span className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.2em]">تحليل موثوق الذكي</span>
           </div>
-          <p className="text-sm leading-relaxed text-neutral-500 italic font-light">
-            {match.analysis || "تحليل التوافق الذكي متاح للمطابقات المقبولة لبناء جسور التفاهم والانسجام بين الطرفين."}
-          </p>
         </div>
-      </div>
+      )}
 
       {/* Actions */}
       <div className="flex gap-4 relative z-10 mt-auto">
