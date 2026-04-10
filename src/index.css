@@ -7,7 +7,7 @@
   
   --color-brand-primary: #1B3C35; /* Deep Royal Teal */
   --color-brand-secondary: #8B1E3F; /* Deep Rose/Burgundy */
-  --color-brand-cream: #FDFCF7; /* Silk/Cream */
+  --color-brand-cream: #FFFFFF; /* Pure White */
   --color-brand-gold: #C5A059;
   --color-brand-accent: #E8E8E0;
   
@@ -18,7 +18,7 @@
 
 @layer base {
   body {
-    @apply bg-brand-cream text-neutral-900 font-sans antialiased selection:bg-brand-primary/10 selection:text-brand-primary;
+    @apply bg-white text-neutral-900 font-sans antialiased selection:bg-brand-primary/10 selection:text-brand-primary;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";
   }
   

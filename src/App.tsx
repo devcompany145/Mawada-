@@ -67,10 +67,12 @@ export interface UserProfile {
   photoURL?: string;
   role: 'client' | 'admin';
   gender: 'male' | 'female';
+  maritalStatus?: 'single' | 'divorced' | 'widowed';
   birthDate: string;
   bio: string;
   values: string[];
   goals: string;
+  marriageReasons?: string;
   isPublic: boolean;
   isVerified?: boolean;
   createdAt: any;
@@ -111,24 +113,25 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
   const isAdmin = profile?.role === 'admin';
 
   return (
-    <nav className="fixed top-4 left-1/2 -translate-x-1/2 w-[95%] max-w-7xl z-50 glass rounded-[2.5rem] px-10 py-4 flex justify-between items-center shadow-premium">
-      <div className="flex items-center gap-12">
-        <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('dashboard')}>
-          <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
-            <Heart className="w-7 h-7 fill-current text-brand-gold" />
+    <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-neutral-100 px-6 py-4 transition-all">
+      <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
+        <div className="flex items-center gap-12">
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('dashboard')}>
+            <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
+              <Heart className="w-7 h-7 fill-current text-brand-gold" />
+            </div>
+            <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight">موثوق</span>
           </div>
-          <span className="text-3xl font-serif font-bold text-brand-primary tracking-tight">موثوق</span>
-        </div>
 
-        {user && profile && (
-          <div className="hidden md:flex items-center gap-10">
-            <button 
-              onClick={() => setView('dashboard')}
-              className={cn(
-                "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
-                currentView === 'dashboard' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
-              )}
-            >
+          {user && profile && (
+            <div className="hidden md:flex items-center gap-10">
+              <button 
+                onClick={() => setView('dashboard')}
+                className={cn(
+                  "flex items-center gap-2 text-sm font-bold transition-all relative py-1 uppercase tracking-[0.1em]",
+                  currentView === 'dashboard' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary"
+                )}
+              >
               <Compass className="w-4 h-4" />
               <span>{isAdmin ? 'لوحة التحكم' : 'ما قبل الزواج (مطابقة)'}</span>
               {currentView === 'dashboard' && (
@@ -244,13 +247,38 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
           </div>
         </div>
       )}
+      </div>
     </nav>
+  );
+};
+
+const Footer = () => {
+  return (
+    <footer className="bg-white border-t border-neutral-100 py-12 mt-auto">
+      <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 premium-gradient rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20">
+            <Heart className="w-5 h-5 fill-current text-brand-gold" />
+          </div>
+          <span className="text-2xl font-serif font-bold text-brand-primary tracking-tight">موثوق</span>
+        </div>
+        <div className="flex flex-wrap justify-center gap-8 text-sm font-medium text-neutral-500">
+          <a href="#" className="hover:text-brand-primary transition-colors">عن موثوق</a>
+          <a href="#" className="hover:text-brand-primary transition-colors">الشروط والأحكام</a>
+          <a href="#" className="hover:text-brand-primary transition-colors">سياسة الخصوصية</a>
+          <a href="#" className="hover:text-brand-primary transition-colors">اتصل بنا</a>
+        </div>
+        <p className="text-sm text-neutral-400">
+          © {new Date().getFullYear()} منصة موثوق. جميع الحقوق محفوظة.
+        </p>
+      </div>
+    </footer>
   );
 };
 
 const LandingPage = ({ onSignIn, onDemoSignIn }: { onSignIn: () => void, onDemoSignIn: () => void }) => {
   return (
-    <div className="bg-brand-cream min-h-screen">
+    <div className="bg-white min-h-screen">
       <LandingHero onSignIn={onSignIn} onDemoSignIn={onDemoSignIn} />
       
       {/* Pre-Marriage Section */}
@@ -581,10 +609,12 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
   const [formData, setFormData] = useState({
     role: 'client' as 'client' | 'admin',
     gender: 'male' as 'male' | 'female',
+    maritalStatus: 'single' as 'single' | 'divorced' | 'widowed',
     birthDate: '',
     bio: '',
     values: [] as string[],
     goals: '',
+    marriageReasons: '',
     isPublic: true
   });
 
@@ -637,7 +667,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
           <h2 className="text-4xl font-serif font-bold text-brand-primary">
             {step === -1 ? 'نوع الحساب' : step === 0 ? 'اختبار التوافق' : step === 1 ? 'تحليل الشخصية الذكي' : 'إكمال الملف الشخصي'}
           </h2>
-          <div className="px-4 py-1.5 bg-brand-cream rounded-full border border-brand-primary/5 shadow-sm">
+          <div className="px-4 py-1.5 bg-neutral-50 rounded-full border border-brand-primary/5 shadow-sm">
             <span className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.2em]">
               {step === -1 ? 'البداية' : step === 0 ? 'التقييم' : `خطوة ${step} من 4`}
             </span>
@@ -722,7 +752,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
                 </div>
               ) : (
                 <div className="space-y-8">
-                  <div className="p-8 bg-brand-cream rounded-[2rem] border border-brand-primary/10 relative overflow-hidden">
+                  <div className="p-8 bg-neutral-50 rounded-[2rem] border border-brand-primary/10 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">
                       <BrainCircuit className="w-32 h-32" />
                     </div>
@@ -805,6 +835,29 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
                   onChange={(e) => setFormData({ ...formData, birthDate: e.target.value })}
                 />
               </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-primary uppercase tracking-[0.2em] mb-4">الحالة الاجتماعية</label>
+                <div className="grid grid-cols-3 gap-4">
+                  {[
+                    { id: 'single', label: 'أعزب / عزباء' },
+                    { id: 'divorced', label: 'مطلق / مطلقة' },
+                    { id: 'widowed', label: 'أرمل / أرملة' }
+                  ].map((status) => (
+                    <button
+                      key={status.id}
+                      onClick={() => setFormData({ ...formData, maritalStatus: status.id as any })}
+                      className={cn(
+                        "py-4 rounded-[1.5rem] border-2 transition-all font-bold text-sm",
+                        formData.maritalStatus === status.id 
+                          ? "border-brand-primary bg-brand-primary/5 text-brand-primary shadow-soft" 
+                          : "border-neutral-50 text-neutral-400 hover:border-brand-primary/20 bg-neutral-50/50"
+                      )}
+                    >
+                      {status.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <button 
                 onClick={() => setStep(3)}
                 disabled={!formData.birthDate}
@@ -843,8 +896,18 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
                   onChange={(e) => setFormData({ ...formData, goals: e.target.value })}
                 />
               </div>
+              <div>
+                <label className="block text-xs font-bold text-brand-primary uppercase tracking-[0.2em] mb-4">أسباب الرغبة في الزواج</label>
+                <textarea 
+                  rows={3}
+                  placeholder="لماذا تبحث عن الزواج؟ (مثال: الاستقرار، تكوين أسرة...)"
+                  className="w-full px-6 py-4 rounded-[1.5rem] border border-neutral-100 bg-neutral-50/50 focus:ring-4 focus:ring-brand-primary/5 focus:border-brand-primary outline-none transition-all resize-none font-light text-brand-primary"
+                  value={formData.marriageReasons}
+                  onChange={(e) => setFormData({ ...formData, marriageReasons: e.target.value })}
+                />
+              </div>
               <div className="flex gap-4">
-                <button onClick={() => setStep(2)} className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">السابق</button>
+                <button onClick={() => setStep(2)} className="flex-1 py-5 bg-neutral-50 text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">السابق</button>
                 <button onClick={() => setStep(4)} className="flex-1 py-5 premium-gradient text-white rounded-[1.5rem] font-bold text-xs uppercase tracking-widest shadow-xl shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">المتابعة</button>
               </div>
             </motion.div>
@@ -858,7 +921,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="p-8 bg-brand-cream rounded-[2rem] border border-brand-primary/10 relative overflow-hidden">
+              <div className="p-8 bg-neutral-50 rounded-[2rem] border border-brand-primary/10 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-5">
                   <Shield className="w-32 h-32" />
                 </div>
@@ -891,7 +954,7 @@ const ProfileSetup = ({ user, onComplete }: { user: User, onComplete: (profile: 
               </div>
               
               <div className="flex gap-4">
-                <button onClick={() => setStep(3)} className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">السابق</button>
+                <button onClick={() => setStep(3)} className="flex-1 py-5 bg-neutral-50 text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all">السابق</button>
                 <button onClick={handleSubmit} className="flex-1 py-5 premium-gradient text-white rounded-[1.5rem] font-bold text-xs uppercase tracking-widest shadow-xl shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all">إنهاء الإعداد</button>
               </div>
             </motion.div>
@@ -1091,7 +1154,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
             onClick={seedDummyData}
-            className="bg-brand-cream rounded-[3rem] p-10 border border-brand-gold/20 shadow-premium flex items-center gap-8 group hover:bg-brand-gold/10 transition-all relative overflow-hidden text-right"
+            className="bg-neutral-50 rounded-[3rem] p-10 border border-brand-gold/20 shadow-premium flex items-center gap-8 group hover:bg-brand-gold/10 transition-all relative overflow-hidden text-right"
           >
             <div className="w-20 h-20 rounded-[2rem] bg-brand-gold flex items-center justify-center text-white shadow-2xl relative z-10">
               <Database className="w-10 h-10" />
@@ -1113,7 +1176,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
               <p className="text-neutral-400 text-base font-light italic">قائمة بجميع الأعضاء المسجلين في المنصة</p>
             </div>
             <div className="flex gap-4">
-              <div className="px-8 py-4 bg-brand-cream rounded-[2rem] border border-brand-primary/5 flex items-center gap-4 shadow-inner">
+              <div className="px-8 py-4 bg-neutral-50 rounded-[2rem] border border-brand-primary/5 flex items-center gap-4 shadow-inner">
                 <div className="w-2 h-2 rounded-full bg-brand-gold animate-pulse" />
                 <span className="text-sm font-bold text-brand-primary uppercase tracking-widest">{users.length} عضو نشط</span>
               </div>
@@ -1136,7 +1199,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
               </thead>
               <tbody className="divide-y divide-neutral-50">
                 {users.map((u) => (
-                  <tr key={u.uid} className="group hover:bg-brand-cream/30 transition-all duration-300">
+                  <tr key={u.uid} className="group hover:bg-neutral-50 transition-all duration-300">
                     <td className="py-8">
                       <div className="flex items-center gap-5">
                         <div className="w-14 h-14 rounded-2xl border-2 border-white overflow-hidden shadow-soft group-hover:scale-110 transition-transform">
@@ -1261,7 +1324,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
               </div>
 
               <div className="space-y-8 mb-12">
-                <div className="p-8 bg-brand-cream/30 rounded-[2.5rem] border border-brand-primary/5">
+                <div className="p-8 bg-neutral-50 rounded-[2.5rem] border border-brand-primary/5">
                   <p className="text-[10px] font-bold text-brand-primary uppercase tracking-[0.3em] mb-4">نوع الوثيقة</p>
                   <p className="text-xl font-bold text-brand-primary">
                     {reviewingUser.verificationData?.docType === 'national_id' ? 'الهوية الوطنية' : 'جواز السفر'}
@@ -1301,7 +1364,7 @@ const AdminDashboard = ({ profile }: { profile: UserProfile }) => {
                 </button>
                 <button 
                   onClick={() => handleVerifyRequest(reviewingUser.uid, false)}
-                  className="flex-1 py-6 bg-brand-cream text-brand-secondary rounded-[2rem] font-bold text-sm uppercase tracking-widest hover:bg-brand-secondary hover:text-white transition-all flex items-center justify-center gap-3"
+                  className="flex-1 py-6 bg-neutral-50 text-brand-secondary rounded-[2rem] font-bold text-sm uppercase tracking-widest hover:bg-brand-secondary hover:text-white transition-all flex items-center justify-center gap-3"
                 >
                   <X className="w-6 h-6" />
                   <span>رفض الطلب</span>
@@ -1428,7 +1491,7 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   </div>
                 </div>
 
-                <div className="bg-brand-cream/50 p-8 rounded-[2rem] border border-brand-primary/5 relative mb-8">
+                <div className="bg-neutral-50 p-8 rounded-[2rem] border border-brand-primary/5 relative mb-8">
                   <div className="absolute top-4 left-4 opacity-10">
                     <Sparkles className="w-8 h-8 text-brand-gold" />
                   </div>
@@ -1525,7 +1588,7 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   
                   <div className="flex items-start justify-between mb-8 relative z-10">
                     <div className="relative group/avatar">
-                      <div className="w-28 h-28 bg-brand-cream rounded-[2.5rem] border-2 border-brand-primary/5 flex items-center justify-center text-brand-primary shadow-inner group-hover/avatar:scale-105 transition-transform overflow-hidden">
+                      <div className="w-28 h-28 bg-neutral-50 rounded-[2.5rem] border-2 border-brand-primary/5 flex items-center justify-center text-brand-primary shadow-inner group-hover/avatar:scale-105 transition-transform overflow-hidden">
                         <img src={p.photoURL || `https://ui-avatars.com/api/?name=${p.displayName}&background=random`} alt={p.displayName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       {p.isVerified && (
@@ -1551,7 +1614,7 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                     <span className="text-neutral-400 text-xs font-bold uppercase tracking-[0.2em]">{p.gender === 'male' ? 'رجل' : 'امرأة'}</span>
                   </div>
                   
-                  <div className="bg-brand-cream/30 p-6 rounded-[2rem] border border-brand-primary/5 mb-10 relative group-hover:bg-brand-cream/50 transition-colors">
+                  <div className="bg-neutral-50 p-6 rounded-[2rem] border border-brand-primary/5 mb-10 relative group-hover:bg-neutral-100 transition-colors">
                     <p className="text-neutral-500 text-sm line-clamp-3 leading-relaxed h-[4.5rem] font-light italic">
                       {p.bio || "لا يوجد نبذة شخصية متاحة حالياً."}
                     </p>
@@ -1727,7 +1790,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
             <textarea 
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              className="w-full p-6 bg-brand-cream/30 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[150px] transition-all"
+              className="w-full p-6 bg-neutral-50 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[150px] transition-all"
               placeholder="تحدث عن نفسك..."
             />
           </div>
@@ -1737,7 +1800,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
             <textarea 
               value={goals}
               onChange={(e) => setGoals(e.target.value)}
-              className="w-full p-6 bg-brand-cream/30 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[100px] transition-all"
+              className="w-full p-6 bg-neutral-50 border border-brand-primary/10 rounded-[2rem] focus:ring-2 focus:ring-brand-primary/20 outline-none min-h-[100px] transition-all"
               placeholder="ما هي أهدافك من الزواج؟"
             />
           </div>
@@ -1758,7 +1821,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
                 value={newValue}
                 onChange={(e) => setNewValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && addValue()}
-                className="flex-1 px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                className="flex-1 px-6 py-4 bg-neutral-50 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
                 placeholder="أضف قيمة جديدة..."
               />
               <button 
@@ -1810,7 +1873,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
           </div>
         ) : (
           <div className="space-y-8">
-            <div className="p-8 bg-brand-cream/30 rounded-[2rem] border border-brand-primary/5 space-y-4">
+            <div className="p-8 bg-neutral-50 rounded-[2rem] border border-brand-primary/5 space-y-4">
               <div className="flex items-center gap-3 text-brand-primary">
                 <AlertCircle className="w-5 h-5" />
                 <p className="font-bold">لماذا توثيق الحساب؟</p>
@@ -1826,7 +1889,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
                 <select 
                   value={docType}
                   onChange={(e) => setDocType(e.target.value as any)}
-                  className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                  className="w-full px-6 py-4 bg-neutral-50 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
                 >
                   <option value="national_id">الهوية الوطنية</option>
                   <option value="passport">جواز السفر</option>
@@ -1839,7 +1902,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
                   value={docUrl}
                   onChange={(e) => setDocUrl(e.target.value)}
                   placeholder="أدخل رابط الصورة..."
-                  className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                  className="w-full px-6 py-4 bg-neutral-50 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
                 />
               </div>
             </div>
@@ -1872,7 +1935,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                className="w-full px-6 py-4 bg-neutral-50 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
               />
             </div>
             <div className="space-y-2">
@@ -1881,7 +1944,7 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-6 py-4 bg-brand-cream/30 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
+                className="w-full px-6 py-4 bg-neutral-50 border border-brand-primary/10 rounded-2xl focus:ring-2 focus:ring-brand-primary/20 outline-none transition-all"
               />
             </div>
           </div>
@@ -2075,7 +2138,7 @@ export default function App() {
 
   if (loading || !isAuthReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-cream">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <motion.div 
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ repeat: Infinity, duration: 2 }}
@@ -2088,10 +2151,10 @@ export default function App() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen bg-brand-cream selection:bg-brand-primary/10 selection:text-brand-primary">
+    <div dir="rtl" className="min-h-screen bg-white selection:bg-brand-primary/10 selection:text-brand-primary flex flex-col">
       <Navbar user={user} profile={profile} onSignOut={handleSignOut} currentView={view} setView={setView} />
       
-      <main>
+      <main className="flex-grow">
         {!user ? (
           <LandingPage onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
         ) : !profile ? (
@@ -2099,7 +2162,7 @@ export default function App() {
             <ProfileSetup user={user} onComplete={setProfile} />
           </div>
         ) : (
-          <div className="min-h-screen pt-32 pb-20 px-6 max-w-7xl mx-auto">
+          <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
             <AnimatePresence mode="wait">
               {view === 'dashboard' ? (
                 <motion.div
@@ -2168,8 +2231,7 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer Decoration */}
-      <div className="fixed bottom-0 left-0 w-full h-1 bg-gradient-to-r from-brand-primary via-brand-gold to-brand-primary opacity-20" />
+      <Footer />
     </div>
   );
 }

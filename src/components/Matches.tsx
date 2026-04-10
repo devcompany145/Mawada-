@@ -68,6 +68,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
     showValues: false,
     showAiAnalysis: true
   });
+  const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
@@ -172,39 +173,53 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
             />
           </div>
 
-          <div className="flex items-center gap-3 bg-brand-cream/50 p-1.5 rounded-full border border-brand-primary/5">
-            <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-brand-primary shadow-sm">
-              <Settings className="w-4 h-4" />
-            </div>
-            <div className="flex gap-1">
-              <button 
-                onClick={() => setDisplaySettings(prev => ({ ...prev, showBio: !prev.showBio }))}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
-                  displaySettings.showBio ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
-                )}
-              >
-                النبذة
-              </button>
-              <button 
-                onClick={() => setDisplaySettings(prev => ({ ...prev, showValues: !prev.showValues }))}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
-                  displaySettings.showValues ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
-                )}
-              >
-                القيم
-              </button>
-              <button 
-                onClick={() => setDisplaySettings(prev => ({ ...prev, showAiAnalysis: !prev.showAiAnalysis }))}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all",
-                  displaySettings.showAiAnalysis ? "bg-brand-primary text-white shadow-md" : "text-neutral-400 hover:text-brand-primary"
-                )}
-              >
-                التحليل
-              </button>
-            </div>
+          <div className="relative">
+            <button 
+              onClick={() => setShowSettingsMenu(!showSettingsMenu)}
+              className="flex items-center gap-2 bg-neutral-50 px-4 py-2.5 rounded-full border border-brand-primary/5 hover:bg-neutral-100 transition-colors"
+            >
+              <Settings className="w-4 h-4 text-brand-primary" />
+              <span className="text-xs font-bold text-brand-primary">إعدادات العرض</span>
+            </button>
+            
+            <AnimatePresence>
+              {showSettingsMenu && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                  className="absolute left-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl border border-neutral-100 p-2 z-50"
+                >
+                  <div className="px-3 py-2 border-b border-neutral-50 mb-2">
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">تخصيص البطاقات</p>
+                  </div>
+                  
+                  <button 
+                    onClick={() => setDisplaySettings(prev => ({ ...prev, showBio: !prev.showBio }))}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-neutral-700">النبذة الشخصية</span>
+                    {displaySettings.showBio ? <Eye className="w-4 h-4 text-brand-primary" /> : <EyeOff className="w-4 h-4 text-neutral-400" />}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setDisplaySettings(prev => ({ ...prev, showValues: !prev.showValues }))}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-neutral-700">القيم والمبادئ</span>
+                    {displaySettings.showValues ? <Eye className="w-4 h-4 text-brand-primary" /> : <EyeOff className="w-4 h-4 text-neutral-400" />}
+                  </button>
+                  
+                  <button 
+                    onClick={() => setDisplaySettings(prev => ({ ...prev, showAiAnalysis: !prev.showAiAnalysis }))}
+                    className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-neutral-50 transition-colors"
+                  >
+                    <span className="text-sm font-medium text-neutral-700">تحليل الذكاء الاصطناعي</span>
+                    {displaySettings.showAiAnalysis ? <Eye className="w-4 h-4 text-brand-primary" /> : <EyeOff className="w-4 h-4 text-neutral-400" />}
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
@@ -361,6 +376,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
           <ProfileModal 
             profile={selectedProfile} 
             onClose={() => setSelectedProfile(null)} 
+            displaySettings={displaySettings}
           />
         )}
       </AnimatePresence>
@@ -368,7 +384,7 @@ export const Matches = ({ currentUserUid, onStartChat }: { currentUserUid: strin
   );
 };
 
-const ProfileModal = ({ profile, onClose }: { profile: UserProfile, onClose: () => void }) => {
+const ProfileModal = ({ profile, onClose, displaySettings }: { profile: UserProfile, onClose: () => void, displaySettings?: { showBio: boolean, showValues: boolean, showAiAnalysis: boolean } }) => {
   const calculateAge = (birthDate: string) => {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -391,7 +407,7 @@ const ProfileModal = ({ profile, onClose }: { profile: UserProfile, onClose: () 
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-brand-cream w-full max-w-4xl max-h-[90vh] rounded-[4rem] shadow-premium overflow-hidden relative flex flex-col"
+        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[4rem] shadow-premium overflow-hidden relative flex flex-col"
       >
         <button 
           onClick={onClose}
@@ -439,35 +455,39 @@ const ProfileModal = ({ profile, onClose }: { profile: UserProfile, onClose: () 
           {/* Content */}
           <div className="p-10 sm:p-16 space-y-16">
             {/* Bio */}
-            <section className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 bg-brand-primary/5 rounded-xl flex items-center justify-center text-brand-primary">
-                  <UserIcon className="w-5 h-5" />
+            {(!displaySettings || displaySettings.showBio) && (
+              <section className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-brand-primary/5 rounded-xl flex items-center justify-center text-brand-primary">
+                    <UserIcon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-serif font-bold text-brand-primary">نبذة تعريفية</h3>
                 </div>
-                <h3 className="text-2xl font-serif font-bold text-brand-primary">نبذة تعريفية</h3>
-              </div>
-              <p className="text-xl text-neutral-500 font-light leading-relaxed text-right">
-                {profile.bio || "لا توجد نبذة تعريفية متاحة."}
-              </p>
-            </section>
+                <p className="text-xl text-neutral-500 font-light leading-relaxed text-right">
+                  {profile.bio || "لا توجد نبذة تعريفية متاحة."}
+                </p>
+              </section>
+            )}
 
             {/* Values & Goals */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              <section className="space-y-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
-                    <Star className="w-5 h-5" />
+              {(!displaySettings || displaySettings.showValues) && (
+                <section className="space-y-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold">
+                      <Star className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-2xl font-serif font-bold text-brand-primary">القيم والمبادئ</h3>
                   </div>
-                  <h3 className="text-2xl font-serif font-bold text-brand-primary">القيم والمبادئ</h3>
-                </div>
-                <div className="flex flex-wrap gap-3">
-                  {profile.values?.map((val, i) => (
-                    <span key={i} className="px-5 py-2 bg-white border border-brand-primary/5 rounded-2xl text-sm text-neutral-600 shadow-sm">
-                      {val}
-                    </span>
-                  ))}
-                </div>
-              </section>
+                  <div className="flex flex-wrap gap-3">
+                    {profile.values?.map((val, i) => (
+                      <span key={i} className="px-5 py-2 bg-white border border-brand-primary/5 rounded-2xl text-sm text-neutral-600 shadow-sm">
+                        {val}
+                      </span>
+                    ))}
+                  </div>
+                </section>
+              )}
 
               <section className="space-y-6">
                 <div className="flex items-center gap-4">
@@ -483,7 +503,7 @@ const ProfileModal = ({ profile, onClose }: { profile: UserProfile, onClose: () 
             </div>
 
             {/* AI Analysis */}
-            {profile.aiAnalysis && (
+            {(!displaySettings || displaySettings.showAiAnalysis) && profile.aiAnalysis && (
               <section className="bg-white rounded-[3rem] p-10 border border-brand-primary/5 shadow-soft space-y-8 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-brand-gold" />
                 <div className="flex items-center justify-between">
@@ -607,7 +627,7 @@ const MatchCard = ({
       <div className="flex items-start justify-between mb-8 relative z-10">
         <div className="flex items-center gap-6">
           <div className="relative">
-            <div className="w-24 h-24 bg-brand-cream rounded-[2.5rem] flex items-center justify-center text-brand-primary shadow-inner group-hover:scale-105 transition-transform overflow-hidden border-2 border-white">
+            <div className="w-24 h-24 bg-neutral-50 rounded-[2.5rem] flex items-center justify-center text-brand-primary shadow-inner group-hover:scale-105 transition-transform overflow-hidden border-2 border-white">
               <img src={match.otherProfile?.photoURL || `https://ui-avatars.com/api/?name=${match.otherProfile?.displayName}&background=random`} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             </div>
             {match.status === 'accepted' && (
@@ -746,7 +766,7 @@ const MatchCard = ({
             <button 
               onClick={() => handleStatusUpdate('rejected')}
               disabled={processing}
-              className="flex-1 py-5 bg-brand-cream text-brand-secondary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-secondary hover:text-white transition-all flex items-center justify-center gap-3"
+              className="flex-1 py-5 bg-neutral-50 text-brand-secondary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-secondary hover:text-white transition-all flex items-center justify-center gap-3"
             >
               <X className="w-5 h-5" />
               <span>اعتذار</span>
@@ -756,9 +776,9 @@ const MatchCard = ({
           <>
             <button 
               onClick={() => match.otherProfile && onViewProfile(match.otherProfile)}
-              className="flex-1 py-5 bg-brand-cream text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn"
+              className="flex-1 py-5 bg-neutral-50 text-brand-primary rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:bg-brand-primary hover:text-white transition-all flex items-center justify-center gap-3 group/btn"
             >
-              <span>عرض الملف الكامل</span>
+              <span>عرض الملف</span>
               <ChevronRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
             </button>
             {match.status === 'accepted' && (
@@ -767,9 +787,10 @@ const MatchCard = ({
                   isOwnRequest ? match.toUid : match.fromUid, 
                   match.otherProfile?.displayName || ''
                 )}
-                className="w-16 h-16 bg-brand-secondary text-white rounded-[1.5rem] flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl shadow-brand-secondary/30 group/chat"
+                className="flex-1 py-5 bg-brand-secondary text-white rounded-[1.5rem] font-bold text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 shadow-xl shadow-brand-secondary/30 group/chat"
               >
-                <MessageCircle className="w-7 h-7 group-hover/chat:rotate-12 transition-transform" />
+                <MessageCircle className="w-5 h-5 group-hover/chat:rotate-12 transition-transform" />
+                <span>مراسلة</span>
               </button>
             )}
           </>
