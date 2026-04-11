@@ -26,6 +26,8 @@ import { auth, db } from './firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { Matches } from './components/Matches';
 import { Chat } from './components/Chat';
+import { ServicesMarketplace } from './components/ServicesMarketplace';
+import { Consulting } from './components/Consulting';
 import { analyzeAssessment } from './services/geminiService';
 import { Assessment, AssessmentData } from './components/Assessment';
 import { NotificationsDropdown, sendNotification } from './components/Notifications';
@@ -56,7 +58,9 @@ import {
   Upload,
   AlertCircle,
   X,
-  Check
+  Check,
+  Target,
+  Wallet
 } from 'lucide-react';
 import { cn } from './lib/utils';
 
@@ -93,7 +97,7 @@ export interface UserProfile {
 
 // --- Components ---
 
-const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User | null, profile: UserProfile | null, onSignOut: () => void, currentView: string, setView: (v: string) => void }) => {
+const Navbar = ({ user, profile, onSignIn, onSignOut, currentView, setView }: { user: User | null, profile: UserProfile | null, onSignIn: () => void, onSignOut: () => void, currentView: string, setView: (v: string) => void }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -116,7 +120,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
     <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-neutral-100 px-6 py-4 transition-all">
       <div className="max-w-7xl mx-auto w-full flex justify-between items-center">
         <div className="flex items-center gap-12">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView('dashboard')}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setView(user ? 'dashboard' : 'landing')}>
             <div className="w-12 h-12 premium-gradient rounded-2xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/20 group-hover:scale-110 transition-transform">
               <Heart className="w-7 h-7 fill-current text-brand-gold" />
             </div>
@@ -133,7 +137,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
                 )}
               >
               <Compass className="w-4 h-4" />
-              <span>{isAdmin ? 'لوحة التحكم' : 'ما قبل الزواج (مطابقة)'}</span>
+              <span>{isAdmin ? 'لوحة التحكم' : 'ما قبل الزواج (موثوق)'}</span>
               {currentView === 'dashboard' && (
                 <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
               )}
@@ -149,7 +153,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
                   )}
                 >
                   <Gift className="w-4 h-4" />
-                  <span>خدمات الزواج (تجهيز)</span>
+                  <span>خدمات الزواج (الخدمات)</span>
                   {currentView === 'preparation' && (
                     <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
                   )}
@@ -163,7 +167,7 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
                   )}
                 >
                   <Headphones className="w-4 h-4" />
-                  <span>ما بعد الزواج (استشارة)</span>
+                  <span>بعد الزواج (استشر)</span>
                   {currentView === 'consultation' && (
                     <motion.div layoutId="nav-active" className="absolute -bottom-1 left-0 right-0 h-0.5 bg-brand-gold rounded-full" />
                   )}
@@ -202,10 +206,26 @@ const Navbar = ({ user, profile, onSignOut, currentView, setView }: { user: User
         )}
 
         {!user && (
-          <div className="hidden md:flex items-center gap-10">
-            <button onClick={() => document.getElementById('pre-marriage')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">ما قبل الزواج</button>
-            <button onClick={() => document.getElementById('marriage-services')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">خدمات الزواج</button>
-            <button onClick={() => document.getElementById('post-marriage')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-neutral-400 hover:text-brand-primary transition-all uppercase tracking-[0.1em]">ما بعد الزواج</button>
+          <div className="hidden md:flex items-center gap-6">
+            <div className="flex items-center gap-8 mr-8 border-r border-neutral-100 pr-8">
+              <button onClick={() => setView('landing')} className={cn("text-sm font-bold transition-all uppercase tracking-[0.1em]", (currentView === 'landing' || currentView === 'dashboard') ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary")}>ما قبل الزواج</button>
+              <button onClick={() => setView('preparation')} className={cn("text-sm font-bold transition-all uppercase tracking-[0.1em]", currentView === 'preparation' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary")}>خدمات الزواج</button>
+              <button onClick={() => setView('consultation')} className={cn("text-sm font-bold transition-all uppercase tracking-[0.1em]", currentView === 'consultation' ? "text-brand-primary" : "text-neutral-400 hover:text-brand-primary")}>ما بعد الزواج</button>
+            </div>
+            <div className="flex items-center gap-3">
+              <button 
+                onClick={onSignIn}
+                className="px-6 py-2.5 text-sm font-bold text-brand-primary hover:bg-brand-primary/5 rounded-full transition-all"
+              >
+                تسجيل دخول
+              </button>
+              <button 
+                onClick={onSignIn}
+                className="px-6 py-2.5 bg-brand-primary text-white text-sm font-bold rounded-full hover:bg-brand-primary/90 shadow-md shadow-brand-primary/20 transition-all"
+              >
+                تسجيل حساب
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -1491,14 +1511,39 @@ const Dashboard = ({ user, profile }: { user: User, profile: UserProfile }) => {
                   </div>
                 </div>
 
-                <div className="bg-neutral-50 p-8 rounded-[2rem] border border-brand-primary/5 relative mb-8">
-                  <div className="absolute top-4 left-4 opacity-10">
-                    <Sparkles className="w-8 h-8 text-brand-gold" />
+                <div className="relative p-8 rounded-[2rem] bg-gradient-to-br from-brand-gold/5 to-transparent border border-brand-gold/20 mb-8 mt-4">
+                  <div className="absolute -top-4 -right-4 w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-brand-gold/20">
+                    <Sparkles className="w-6 h-6 text-brand-gold" />
                   </div>
-                  <p className="text-base text-neutral-600 leading-relaxed italic font-light">
-                    {profile.aiAnalysis.detailedAnalysis}
+                  <p className="text-lg text-brand-primary leading-relaxed font-medium">
+                    "{profile.aiAnalysis.detailedAnalysis}"
                   </p>
                 </div>
+
+                {/* Assessment Strengths Cards */}
+                {profile.assessment && (
+                  <div className="mb-8 space-y-4">
+                    <h5 className="text-sm font-bold text-brand-primary uppercase tracking-[0.2em] mb-4">أبرز السمات الشخصية</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { label: 'أسلوب النقاش', value: profile.assessment.conflictStyle, icon: BrainCircuit },
+                        { label: 'الأولوية الحالية', value: profile.assessment.lifePriority, icon: Target },
+                        { label: 'النمط الاجتماعي', value: profile.assessment.socialPreference, icon: Users },
+                        { label: 'النظرة المالية', value: profile.assessment.financialView, icon: Wallet }
+                      ].map((item, i) => (
+                        <div key={i} className="p-4 bg-white rounded-2xl border border-brand-primary/5 shadow-sm flex items-center gap-3 hover:shadow-md transition-all">
+                          <div className="w-10 h-10 bg-brand-gold/10 rounded-xl flex items-center justify-center text-brand-gold shrink-0">
+                            <item.icon className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">{item.label}</p>
+                            <p className="text-sm font-bold text-brand-primary">{item.value}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Support & Guidance Section */}
                 <div className="space-y-4">
@@ -1985,66 +2030,6 @@ const Settings = ({ user, profile, onUpdateProfile }: { user: any, profile: User
   );
 };
 
-const ConsultationView = () => (
-  <div className="py-20 text-center space-y-10">
-    <div className="w-32 h-32 bg-brand-primary/5 rounded-[3rem] flex items-center justify-center mx-auto shadow-premium">
-      <Headphones className="w-16 h-16 text-brand-primary" />
-    </div>
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h2 className="text-5xl font-serif font-bold text-brand-primary">خدمات ما بعد الزواج</h2>
-      <p className="text-xl text-neutral-500 font-light leading-relaxed">
-        نحن معك في كل خطوة. نقدم جلسات إرشادية خاصة مع خبراء أسريين لضمان استقرار وسعادة حياتك الزوجية الجديدة.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
-        {[
-          { title: "جلسات إرشادية", desc: "تواصل مباشر مع مستشارين متخصصين." },
-          { title: "حل النزاعات", desc: "أدوات ومهارات للتعامل مع التحديات الأسرية." },
-          { title: "تطوير الذات", desc: "برامج لتعزيز النمو الشخصي داخل العلاقة." },
-          { title: "دعم مستمر", desc: "متابعة دورية لضمان جودة الحياة الزوجية." }
-        ].map((item, i) => (
-          <div key={i} className="p-8 bg-white rounded-[2rem] border border-brand-primary/5 shadow-soft hover:shadow-gold transition-all text-right">
-            <h3 className="font-bold text-brand-primary mb-2">{item.title}</h3>
-            <p className="text-sm text-neutral-400 font-light">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-      <button className="mt-12 px-12 py-5 premium-gradient text-white rounded-[2rem] font-bold text-lg shadow-premium hover:scale-105 transition-all">
-        حجز جلسة إرشادية
-      </button>
-    </div>
-  </div>
-);
-
-const PreparationView = () => (
-  <div className="py-20 text-center space-y-10">
-    <div className="w-32 h-32 bg-brand-gold/5 rounded-[3rem] flex items-center justify-center mx-auto shadow-premium">
-      <Gift className="w-16 h-16 text-brand-gold" />
-    </div>
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h2 className="text-5xl font-serif font-bold text-brand-primary">خدمات الزواج (تجهيز)</h2>
-      <p className="text-xl text-neutral-500 font-light leading-relaxed">
-        كل ما تحتاجه لبدء رحلتك الجديدة. نوفر لك أفضل العروض والخدمات لتجهيز منزلك وحفل زفافك بأعلى المعايير.
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10">
-        {[
-          { title: "تجهيز المنزل", desc: "عروض حصرية على الأثاث والأجهزة الكهربائية." },
-          { title: "تنظيم الحفلات", desc: "تنسيق كامل لحفل الزفاف بأرقى القاعات." },
-          { title: "عروض السفر", desc: "باقات مميزة لشهر العسل في أجمل الوجهات." },
-          { title: "هدايا موثوق", desc: "خصومات خاصة لمشتركي المنصة من شركائنا." }
-        ].map((item, i) => (
-          <div key={i} className="p-8 bg-white rounded-[2rem] border border-brand-primary/5 shadow-soft hover:shadow-gold transition-all text-right">
-            <h3 className="font-bold text-brand-primary mb-2">{item.title}</h3>
-            <p className="text-sm text-neutral-400 font-light">{item.desc}</p>
-          </div>
-        ))}
-      </div>
-      <button className="mt-12 px-12 py-5 premium-gradient text-white rounded-[2rem] font-bold text-lg shadow-premium hover:scale-105 transition-all">
-        استكشف العروض الحصرية
-      </button>
-    </div>
-  </div>
-);
-
 export default function App() {
   const [user, setUser] = useState<any | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -2152,30 +2137,24 @@ export default function App() {
 
   return (
     <div dir="rtl" className="min-h-screen bg-white selection:bg-brand-primary/10 selection:text-brand-primary flex flex-col">
-      <Navbar user={user} profile={profile} onSignOut={handleSignOut} currentView={view} setView={setView} />
+      <Navbar user={user} profile={profile} onSignIn={handleSignIn} onSignOut={handleSignOut} currentView={view} setView={setView} />
       
       <main className="flex-grow">
-        {!user ? (
-          <LandingPage onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
-        ) : !profile ? (
+        {user && !profile ? (
           <div className="pt-32 pb-20 px-6">
             <ProfileSetup user={user} onComplete={setProfile} />
           </div>
         ) : (
-          <div className="pt-32 pb-20 px-6 max-w-7xl mx-auto">
+          <div className={(!user && (view === 'landing' || view === 'dashboard')) ? "" : "pt-32 pb-20 px-6 max-w-7xl mx-auto"}>
             <AnimatePresence mode="wait">
-              {view === 'dashboard' ? (
+              {(!user && (view === 'landing' || view === 'dashboard')) ? (
                 <motion.div
-                  key="dashboard"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
+                  key="landing"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                 >
-                  {profile.role === 'admin' ? (
-                    <AdminDashboard profile={profile} />
-                  ) : (
-                    <Dashboard user={user} profile={profile} />
-                  )}
+                  <LandingPage onSignIn={handleSignIn} onDemoSignIn={handleDemoSignIn} />
                 </motion.div>
               ) : view === 'preparation' ? (
                 <motion.div
@@ -2184,7 +2163,7 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <PreparationView />
+                  <ServicesMarketplace />
                 </motion.div>
               ) : view === 'consultation' ? (
                 <motion.div
@@ -2193,39 +2172,54 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                 >
-                  <ConsultationView />
+                  <Consulting />
                 </motion.div>
-              ) : view === 'settings' ? (
-                <motion.div
-                  key="settings"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <Settings user={user} profile={profile} onUpdateProfile={setProfile} />
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="matches"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  {activeChat ? (
-                    <Chat 
-                      currentUserUid={user.uid}
-                      otherUserUid={activeChat.uid}
-                      otherDisplayName={activeChat.name}
-                      onBack={() => setActiveChat(null)}
-                    />
-                  ) : (
-                    <Matches 
-                      currentUserUid={user.uid} 
-                      onStartChat={(uid, name) => setActiveChat({ uid, name })}
-                    />
-                  )}
-                </motion.div>
-              )}
+              ) : user && profile ? (
+                view === 'dashboard' ? (
+                  <motion.div
+                    key="dashboard"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    {profile.role === 'admin' ? (
+                      <AdminDashboard profile={profile} />
+                    ) : (
+                      <Dashboard user={user} profile={profile} />
+                    )}
+                  </motion.div>
+                ) : view === 'settings' ? (
+                  <motion.div
+                    key="settings"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    <Settings user={user} profile={profile} onUpdateProfile={setProfile} />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="matches"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                  >
+                    {activeChat ? (
+                      <Chat 
+                        currentUserUid={user.uid}
+                        otherUserUid={activeChat.uid}
+                        otherDisplayName={activeChat.name}
+                        onBack={() => setActiveChat(null)}
+                      />
+                    ) : (
+                      <Matches 
+                        currentUserUid={user.uid} 
+                        onStartChat={(uid, name) => setActiveChat({ uid, name })}
+                      />
+                    )}
+                  </motion.div>
+                )
+              ) : null}
             </AnimatePresence>
           </div>
         )}
